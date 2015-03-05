@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2010, 2011, 2012 Guenther Hoelzl, Shawn Brown
+
+    This file is part of MINDdroid.
+  
+    MINDdroid is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation, either version 3 of the License, or (at your option) any later
+    version.
+  
+    MINDdroid is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+    A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+  
+    You should have received a copy of the GNU General Public License along with
+    MINDdroid. If not, see <http://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="nxt_default_name">NXT</string>
+    <string name="app_name">MINDdroid</string>
+    <string name="about">About</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="start">Start Program</string>
+    <string name="quit">Quit</string>    
+    <string name="action">Action!</string>   
+    <string name="next">Next</string>
+    <string name="options">Robot Type</string>  
+    <string name="upload">Upload File</string>  
+    <string name="model_type_selected">Model type set to:</string>   
+    
+    <!-- file dialog and message -->
+    <string name="no_programs_found">No programs found on NXT robot!</string>    
+    <string name="file_dialog_title_1">Start/Stop a program</string>    
+    <string name="file_dialog_title_2">Start a program</string>    
+
+    <!-- bluetooth messages -->
+    <string name="connecting_please_wait">Connecting to your NXT robot.\nPlease wait&#8230;</string>
+    <string name="no_paired_nxt">No paired NXT robot found!</string>
+    <string name="problem_at_connecting">Problem in creating a connection!</string>
+    <string name="problem_at_closing">Problem in closing the connection!</string>
+    <string name="problem_at_sending">Problem in sending a message!</string>
+    <string name="problem_at_receiving">Problem in receiving a message!</string>  
+
+    <string name="current_position">Current position: </string>
+    <string name="lama_title">LEGO Application MINDdroid Agreement</string>
+    <string name="lama_accept">I want to play!</string>
+    <string name="lama_refuse">No, thanks.</string>
+
+    <string name="bt_error_dialog_title">BlueTooth Error</string>    
+
+    <string name="bt_error_dialog_message">
+        Oh, no! It seems that your NXT robot is not switched on. Please make sure that
+        your NXT robot is on and has BlueTooth switched on and then try again to connect.
+    </string>    
+    <string name="bt_needs_to_be_enabled">You need to enable BlueTooth first!"</string>
+    
+    <!-- Splash Menu -->
+    <string name="tutorial">Tutorial</string>
+    <string name="start_button">Start</string>
+    <string name="credits">Credits</string>
+    
+    <!--  DeviceListActivity -->
+    <string name="scanning">Scanning area for NXT robots&#8230;</string>
+    <string name="select_device">Please, select your NXT robot.</string>
+    <string name="none_paired">No NXT robots have been paired.</string>
+    <string name="none_found">No NXT robots to be found.</string>
+    <string name="title_paired_devices">Paired NXT robots</string>
+    <string name="title_other_devices">Other available NXT robots</string>
+    <string name="button_scan">Scan for the new NXT robot</string>
+    <string name="pairing_message">After pairing, press <b>Menu</b> and connect.</string>
+    <string name="wait_till_bt_on">Turning BlueTooth on to connect to your NXT robot.</string>
+    <string name="bt_off_message">BlueTooth is turned off. See you later!</string>
+
+    <!--  TTS problems -->
+    <string name="tts_language_not_supported">
+        \"Text to Speech\": Language not supported.
+        Please install SpeechSynthesis Data from Google Play!
+    </string>
+    
+    <string name="tts_problem_with_language">
+        \"Text to Speech\": Problems with the current language.
+    </string>
+    
+    <string name="tts_initialization_failure">
+        \"Text to Speech\": Initalization failure.
+    </string>
+
+    <!--  Sensor/bluetooth problem -->
+    <string name="sensor_initialization_failure">
+        No appropriate sensor found!
+    </string>    
+    <string name="bt_initialization_failure">
+        BlueTooth not supported!
+    </string>    
+
+            
+    <!-- About Dialog -->
+    <string name="about_general">
+        MINDdroid is a result of a co-creation between LEGO® MINDSTORMS®  
+        and its worldwide community of users and it is endorsed by the LEGO Group.
+    </string>    
+    <string name="about_license_gpl">
+        Source code for MINDdroid is released under GPLv3 licence\nsee http://gplv3.fsf.org/
+    </string>    
+    <string name="about_license_lego">
+        LEGO and LEGO MINDSTORMS logo, icons and sounds are excluded from this licence
+        and remain property of the LEGO Group.
+    </string>    
+    <string name="about_people">
+        <b>Idea and code</b>\n
+        Günther Hölzl\nHTL Mössingerstraße, Austria\nhttp://www.htl-klu.at\n\n
+        Shawn Brown\nTokyo, Japan\nhttp://github.com/Shawn-in-Tokyo\n\n
+        <b>UI, menu and a logo design</b>\n
+        Matias Billeschou\nLEGO SYSTEM A/S, Denmark\nhttp://www.lego.com\n\n
+        <b>Icons and overall graphic design</b>\n
+        Vaidas Bagonas\nLEGO SYSTEM A/S, Denmark\nhttp://www.lego.com\n\n
+        <b>Additional code, UX, concept and production</b>\n
+        Harv Stanic\nLEGO SYSTEM A/S, Denmark\nhttp://www.lego.com\n\n
+        <b>Credits to</b>\n
+        Michael Biermann\n\n
+        <b>Thanks to</b>\n
+        Michael B. Andersen for Pong\n
+        The whole leJOS NXJ and NXC/NBC community
+    </string>
+    <string name="about_thanks">
+        Thank you for downloading and using MINDdroid with your LEGO MINDSTORMS robots!
+    </string>     
+    <string name="about_LEGO_legal">            
+        © 2010, 2011, 2012 The LEGO Group.\nAll rights reserved.
+    </string>     
+    <string name="about_ok">OK</string>
+
+    <!-- Tutorial -->
+    <string name="want_to_know_more">
+        Do you want to know more? 
+    </string>    
+    
+    <string name="tutorial_welcome_droid">
+        Welcome, roboteer!
+    </string>    
+    
+    <string name="tutorial_bubble_01">
+        What is this?
+    </string>    
+
+    <string name="tutorial_bubble_02">
+        Aha, right.\nHow does it work?
+    </string>    
+
+    <string name="tutorial_bubble_03">
+        It looks nice.\nWhat is this little\nblinking square for?
+    </string>    
+
+    <string name="tutorial_bubble_04">
+        Oh, yes. But why?
+    </string>    
+
+    <string name="tutorial_bubble_05">
+        OK, thanks a lot.\nI am off to play now&#8230;
+    </string>    
+    
+    <string name="tutorial_a">    
+        MINDdroid is LEGO® interactive remote control application for LEGO® MINDSTORMS® NXT robots.\n 
+        With direct BlueTooth connection MINDdroid is using built-in accelerometer and tilt sensors 
+        on your Android devices to drive your LEGO robot around.\n No computer or programming is needed
+        as MINDdroid Universal Uploader enables you to upload files directly from your phone to your robot
+        and run them instantly.\nPlease make sure that your NXT robot has BlueTooth on and it is paired to 
+        your phone or a tablet beforehand.\n 
+        In the menu the left button enables you to connect to your NXT robot model. 
+        It takes about 2-3 seconds to connect and you are ready to play well...    
+    </string>
+
+    <string name="tutorial_b">    
+        It interacts in a real-time with NXT robot models built to drive and shoot or
+        drive and throw or drive and hit or just drive. By tilting your mobile device down
+        it moves forward. Tilting it up makes your NXT robot model move in the opposite direction
+        or backwards. 
+    </string>
+
+    <string name="tutorial_c1">
+        Twisting your hand to the left, it will make your NXT robot turn left and if you twist 
+        right - it will turn right. It is easy.
+    </string>
+
+    <string name="tutorial_c2">
+        It has an <b>Action button</b> and when shortly pressed triggers the motor dedicated for doing simple tasks. 
+        For the Shooterbot and the Tribot it drives the motor 180° forward and back and for the Robogator 
+        the mouth will open and close three times. Isn\'t that cool?\n 
+        You can reverse action by pressing the <b>Action button</b> somewhat longer.
+        It works really well with the easy-to-build starter model Shooterbot, the 8527 Tribot and the Robogator 
+        from the LEGO MINDSTORMS building instructions. Just select your robot type via the menu button on your Android phone
+        when you are on the <b>Tutorial-Start</b> screen.
+    </string>
+
+    <string name="tutorial_d">    
+        With the help of advanced firmware for NXT - leJOS NXJ (see http://www.lejos.org) you will be able 
+        to control other robot models like our famed AlphaRex. With leJOS in place of original LEGO firmware 
+        you can have read-out of UltraSonic sensor,reading the distance between your NXT robot and an object or a wall,
+        Your robot can also recognize colors and can read them out aloud to you via speaker on your phone.\n 
+        Best of all, you can upload files directly from your phone or tablet to your NXT robot and start them remotely.
+        Last but not the least, we supplied two (2) .nxj files - AlphaRex and MINDGameZ, and five (5) .rxe files - Pong, 
+        NXTCounter, Block, LineFollower, Robogator.
+        With those files you can have at an instant hours of fun with your NXT robot.\n 
+        You can start those via <b>Menu -> Start Program</b> button. You can stop only AlphaRex and MINDGameZ programs 
+        in leJOS firmware by pressing the <b>Menu -> Start Program</b> for the second time.\n\n 
+        <i>You will find printable tracks for MINDGameZ on http://mindstorms.com. But it could be fun to try to 
+        construct new tracks with a thick black marker on a huge sheet of paper or a black tape on the floor.</i> 
+    </string>
+
+    <string name="tutorial_e">    
+        It indicates the direction you are tilting your hand-held device in and the direction
+        your NXT robot moves. Short haptic feedback indicates that you just started driving around.
+        Holding your phone flat in your palm will make NXT robot stand still.  The more you tilt,
+        the faster the NXT robot moves and the faster the square blinks. Cool, huh?    
+    </string>
+
+    <string name="tutorial_f">    
+        Because we can. And we think it is fun. Moreover, it will inspire you and many others
+        to start building cool Applications for interacting with NXT robots and Android devices and even
+        more cool LEGO MINDSTORMS robots. Because <b>you</b> can!\n\nNow go, try it out, have fun,
+        play well and do not forget to visit us at http://mindstorms.com for more news,
+        info and upcoming apps and goodies.
+    </string>
+
+    <!-- Universal Uploader -->
+    <string name="uul_name">Universal Uploader</string>
+    <string name="uul_select_nxt">1 - Select NXT robot</string>
+    <string name="uul_select_file">2 - Select file</string>
+    <string name="uul_action">3 - Upload</string>
+    <string name="uul_file_dialog_title">Select a file.</string>
+    <string name="uul_nxt_dialog_title">Select your NXT robot.</string>
+    <string name="uul_please_select_nxt">Please, select your NXT robot first!</string>
+    <string name="uul_please_select_file">Please, select a file first!</string>
+    <string name="uul_connecting">Connecting, please wait&#8230;</string>
+    <string name="uul_uploading">Uploading, please wait&#8230;</string>
+    <string name="uul_bluetooth_open_error">Unable to open BlueTooth connection!</string>
+    <string name="uul_bluetooth_close_error">Error while closing BlueTooth connection!</string>
+    <string name="uul_file_open_error">Error while opening the file!</string>
+    <string name="uul_uploading_error">Error while uploading the file!</string>
+    <string name="uul_other_error">Aww, an unknown error occurred.</string>
+    <string name="uul_no_files">No files to be found.</string>
+    <string name="uul_no_paired_NXT">No paired NXT robot found or BlueTooth is switched off.</string>
+    <string name="uul_bluetooth_pairing">After pairing, please press <b>Upload</b> button again.</string>
+    <string name="no_content_description"/>
+    <string name="legal_notification">Legal notification</string>
+    <string name="robot_type_shooterbot">Shooterbot</string>
+    <string name="robot_type_tribot">Tribot</string>
+    <string name="robot_type_robogator">Robogator</string>
+    <string name="robot_type_lejos">leJOS NXJ model</string>
+    <string name="title_activity_ovladanie">Ovladanie</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+            
+</resources>
