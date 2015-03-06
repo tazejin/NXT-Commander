@@ -1,21 +1,3 @@
-/**
- * Copyright 2010, 2011, 2012 Guenther Hoelzl, Shawn Brown
- *
- * This file is part of MINDdroid.
- *
- * MINDdroid is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
- *
- * MINDdroid is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * MINDdroid. If not, see <http://www.gnu.org/licenses/>.
- **/
-
 package com.jurajpaulik.legonxt;
 
 import java.io.IOException;
@@ -37,6 +19,7 @@ import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -46,7 +29,7 @@ import android.widget.Toast;
  * The communciation to the robot is done via LCP (LEGO communication protocol), 
  * so no special software has to be installed on the robot.
  */
-public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.OnInitListener {
+public class MINDdroid extends Activity implements BTConnectable {
 
     public static final int UPDATE_TIME = 200;
     public static final int MENU_TOGGLE_CONNECT = Menu.FIRST;
@@ -79,10 +62,6 @@ public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.O
     private static final int MAX_PROGRAMS = 20;
     private String programToStart;
     private Toast reusableToast;
-    
-    // experimental TTS support
-    private TextToSpeech mTts;
-    private final int TTS_CHECK_CODE = 9991;
 
     /**
      * Asks if bluetooth was switched on during the runtime of the app. For saving 
@@ -122,16 +101,9 @@ public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.O
         setUpByType();
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        StartSound mySound = new StartSound(this);
-        mySound.start();
         // setup our view, give it focus and display.
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.ovladanie);
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
-
-        // experimental TTS support for the lejosMINDdroid project
-        mTts = new TextToSpeech(this,
-            this  // TextToSpeech.OnInitListener
-            );
     }
 
     /**
@@ -161,8 +133,6 @@ public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.O
                 directionLeft = 1;
                 motorRight = BTCommunicator.MOTOR_C;
                 directionRight = 1;
-                motorAction = BTCommunicator.MOTOR_A;
-                directionAction = 1;
                 break;
         }
     }
@@ -258,8 +228,7 @@ public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.O
             }
             else {
                 // G-F-E-D-C
-                sendBTCmessage(BTCommunicator.NO_DELAY, 
-                    BTCommunicator.DO_BEEP, 392, 100);
+                sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.DO_BEEP, 392, 100);
                 sendBTCmessage(200, BTCommunicator.DO_BEEP, 349, 100);
                 sendBTCmessage(400, BTCommunicator.DO_BEEP, 330, 100);
                 sendBTCmessage(600, BTCommunicator.DO_BEEP, 294, 100);
@@ -675,42 +644,6 @@ public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.O
                     
                     break;
                     
-                case BTCommunicator.SAY_TEXT:
-                    if (myBTCommunicator != null) {
-                        byte[] textMessage = myBTCommunicator.getReturnMessage();
-                        // evaluate control byte 
-                        byte controlByte = textMessage[2];
-                        // BIT7: Language
-                        if ((controlByte & 0x80) == 0x00) 
-                            mTts.setLanguage(Locale.US);
-                        else
-                            mTts.setLanguage(Locale.getDefault());
-                        // BIT6: Pitch
-                        if ((controlByte & 0x40) == 0x00)
-                            mTts.setPitch(1.0f);
-                        else
-                            mTts.setPitch(0.75f);
-                        // BIT0-3: Speech Rate    
-                        switch (controlByte & 0x0f) {
-                            case 0x01: 
-                                mTts.setSpeechRate(1.5f);
-                                break;                                 
-                            case 0x02: 
-                                mTts.setSpeechRate(0.75f);
-                                break;
-                            
-                            default: mTts.setSpeechRate(1.0f);
-                                break;
-                        }
-                                                                                                        
-                        String ttsText = new String(textMessage, 3, 19);
-                        ttsText = ttsText.replaceAll("\0","");
-                        showToast(ttsText, Toast.LENGTH_SHORT);
-                        mTts.speak(ttsText, TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                    
-                    break;                    
-                    
                 case BTCommunicator.VIBRATE_PHONE:
                     if (myBTCommunicator != null) {
                         byte[] vibrateMessage = myBTCommunicator.getReturnMessage();
@@ -771,45 +704,6 @@ public class MINDdroid extends Activity implements BTConnectable, TextToSpeech.O
                 }
                 
                 break;
-
-            // will not be called now, since the check intent is not generated                
-            case TTS_CHECK_CODE:
-                if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                    // success, create the TTS instance
-                    mTts = new TextToSpeech(this, this);
-                } 
-                else {
-                    // missing data, install it
-                    Intent installIntent = new Intent();
-                    installIntent.setAction(
-                        TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                    startActivity(installIntent);
-                }
-                
-                break;                
-        }
-    }
-
-    /**
-     * Initializing of the TTS engine.
-     */
-    public void onInit(int status) {
-        // status can be either TextToSpeech.SUCCESS or TextToSpeech.ERROR.
-        if (status == TextToSpeech.SUCCESS) {
-            // Set preferred language to US english.
-            // Note that a language may not be available, and the result will indicate this.
-            int result = mTts.setLanguage(Locale.US);
-            // Try this someday for some interesting results.
-            if (result == TextToSpeech.LANG_MISSING_DATA ||
-                result == TextToSpeech.LANG_NOT_SUPPORTED) {            
-                // Language data is missing or the language is not supported.
-                if (mRobotType == R.id.robot_type_lejos)
-                    showToast(R.string.tts_language_not_supported, Toast.LENGTH_LONG);
-            } 
-        } else {
-            // Initialization failed.
-            if (mRobotType == R.id.robot_type_lejos)
-                showToast(R.string.tts_initialization_failure, Toast.LENGTH_LONG);
         }
     }
 }

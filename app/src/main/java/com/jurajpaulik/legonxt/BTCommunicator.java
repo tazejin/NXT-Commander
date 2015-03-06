@@ -66,6 +66,7 @@ public class BTCommunicator extends Thread {
     public static final int PROGRAM_NAME = 1011;
     public static final int SAY_TEXT = 1030;
     public static final int VIBRATE_PHONE = 1031;
+    public static final int TEST = 666;
 
     public static final int NO_DELAY = 0;
 
@@ -315,12 +316,7 @@ public class BTCommunicator extends Thread {
                 }
                 
                 break;
-                
-            case LCPMessage.SAY_TEXT:
-                
-                if (message.length == 22) {
-                    sendState(SAY_TEXT);
-                }
+
                 
             case LCPMessage.VIBRATE_PHONE:
                 if (message.length == 3) {
@@ -416,6 +412,11 @@ public class BTCommunicator extends Thread {
         Message myMessage = myHandler.obtainMessage();
         myMessage.setData(myBundle);
         uiHandler.sendMessage(myMessage);
+    }
+
+    private void doTest(){
+        byte[] message = {0x06, 0x00, (byte) 0x80, 0x03, 0x0B, 0x02, (byte) 0xF4, 0x01};
+            sendMessageAndState(message);
     }
 
     // receive messages from the UI

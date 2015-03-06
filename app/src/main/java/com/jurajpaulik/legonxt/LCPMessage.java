@@ -115,7 +115,7 @@ public class LCPMessage {
 
         return message;
     }
-    
+
     public static byte[] getActionMessage(int actionNr) {
         byte[] message = new byte[3];
 
