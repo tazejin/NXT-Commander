@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.jurajpaulik.legonxt.Programovanie">
+    <item android:id="@+id/forward"
+        android:icon="@drawable/arrow_up"
+        android:title="Up"/>
+    <item android:id="@+id/backward"
+        android:icon="@drawable/arrow_down"
+        android:title="Down"/>
+    <item android:id="@+id/left"
+        android:icon="@drawable/arrow_left"
+        android:title="Left"/>
+    <item android:id="@+id/right"
+        android:icon="@drawable/arrow_right"
+        android:title="Right"/>
+</menu>

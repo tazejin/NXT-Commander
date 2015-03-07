@@ -3,7 +3,6 @@ package com.jurajpaulik.legonxt;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -13,14 +12,22 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
-import android.speech.tts.TextToSpeech;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 /**
@@ -34,11 +41,12 @@ public class MINDdroid extends Activity implements BTConnectable {
     public static final int UPDATE_TIME = 200;
     public static final int MENU_TOGGLE_CONNECT = Menu.FIRST;
     public static final int MENU_START_SW = Menu.FIRST + 1;
-    public static final int MENU_QUIT = Menu.FIRST + 2;
-    
+    public static final int MENU_START_SOUND = Menu.FIRST + 2;
+    public static final int MENU_QUIT = Menu.FIRST + 3;
+
     public static final int ACTION_BUTTON_SHORT = 0;
     public static final int ACTION_BUTTON_LONG = 1;
-    
+
     private static final int REQUEST_CONNECT_DEVICE = 1000;
     private static final int REQUEST_ENABLE_BT = 2000;
     private BTCommunicator myBTCommunicator = null;
@@ -59,9 +67,25 @@ public class MINDdroid extends Activity implements BTConnectable {
     private int motorAction;
     private int directionAction; // +/- 1
     private List<String> programList;
+    private List<String> soundList;
     private static final int MAX_PROGRAMS = 20;
     private String programToStart;
     private Toast reusableToast;
+    private int power = 80;
+    private boolean command1;
+    private boolean command2;
+    private boolean command3;
+    private boolean command4;
+    private boolean command5;
+    private int buttonID;
+    private double leftMotor;
+    private double rightMotor;
+    private int param;
+    private int param1;
+    private int param2;
+    private int param3;
+    private int param4;
+    private int param5;
 
     /**
      * Asks if bluetooth was switched on during the runtime of the app. For saving 
@@ -96,14 +120,44 @@ public class MINDdroid extends Activity implements BTConnectable {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         thisActivity = this;
-        mRobotType = this.getIntent().getIntExtra(SplashMenu.MINDDROID_ROBOT_TYPE, 
-            R.id.robot_type_shooterbot);
+        mRobotType = this.getIntent().getIntExtra(SplashMenu.MINDDROID_ROBOT_TYPE,
+                R.id.robot_type_shooterbot);
         setUpByType();
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         // setup our view, give it focus and display.
         setContentView(R.layout.ovladanie);
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+
+        ImageButton buttonUp = (ImageButton) findViewById(R.id.buttonUp);
+        buttonUp.setOnTouchListener(new DirectionButtonOnTouchListener(1, 1));
+        ImageButton buttonLeft = (ImageButton) findViewById(R.id.buttonLeft);
+        buttonLeft.setOnTouchListener(new DirectionButtonOnTouchListener(0.6, -0.6));
+        ImageButton buttonDown = (ImageButton) findViewById(R.id.buttonDown);
+        buttonDown.setOnTouchListener(new DirectionButtonOnTouchListener(-1, -1));
+        ImageButton buttonRight = (ImageButton) findViewById(R.id.buttonRight);
+        buttonRight.setOnTouchListener(new DirectionButtonOnTouchListener(-0.6, 0.6));
+
+        SeekBar powerSeekBar = (SeekBar) findViewById(R.id.power_seekbar);
+        powerSeekBar.setProgress(power);
+        powerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                                          boolean fromUser) {
+                if (progress <= 25)
+                    progress = 25;
+                seekBar.setProgress(25);
+                power = progress;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
     }
 
     /**
@@ -111,22 +165,6 @@ public class MINDdroid extends Activity implements BTConnectable {
      */
     private void setUpByType() {
         switch (mRobotType) {
-            case R.id.robot_type_tribot:
-                motorLeft = BTCommunicator.MOTOR_B;
-                directionLeft = 1;
-                motorRight = BTCommunicator.MOTOR_C;
-                directionRight = 1;
-                motorAction = BTCommunicator.MOTOR_A;
-                directionAction = 1;
-                break;
-            case R.id.robot_type_robogator:
-                motorLeft = BTCommunicator.MOTOR_C;
-                directionLeft = -1;
-                motorRight = BTCommunicator.MOTOR_B;
-                directionRight = -1;
-                motorAction = BTCommunicator.MOTOR_A;
-                directionAction = 1;
-                break;
             default:
                 // default
                 motorLeft = BTCommunicator.MOTOR_B;
@@ -170,7 +208,7 @@ public class MINDdroid extends Activity implements BTConnectable {
      * @param mac_address The MAC address of the NXT robot.
      */
     private void startBTCommunicator(String mac_address) {
-        connected = false;        
+        connected = false;
         connectingProgressDialog = ProgressDialog.show(this, "", getResources().getString(R.string.connecting_please_wait), true);
 
         if (myBTCommunicator != null) {
@@ -208,131 +246,63 @@ public class MINDdroid extends Activity implements BTConnectable {
     }
 
     /**
-     * Does something special depending on the robot-type.
-     * @param buttonMode short, long or other press types.
-     */
-    private void performActionCommand(int buttonMode) {
-        
-        if (mRobotType != R.id.robot_type_lejos) {
-            if (buttonMode == ACTION_BUTTON_SHORT) {
-                // Wolfgang Amadeus Mozart 
-                // "Zauberfloete - Der Vogelfaenger bin ich ja"
-                sendBTCmessage(BTCommunicator.NO_DELAY, 
-                    BTCommunicator.DO_BEEP, 392, 100);
-                sendBTCmessage(200, BTCommunicator.DO_BEEP, 440, 100);
-                sendBTCmessage(400, BTCommunicator.DO_BEEP, 494, 100);
-                sendBTCmessage(600, BTCommunicator.DO_BEEP, 523, 100);
-                sendBTCmessage(800, BTCommunicator.DO_BEEP, 587, 300);
-                sendBTCmessage(1200, BTCommunicator.DO_BEEP, 523, 300);
-                sendBTCmessage(1600, BTCommunicator.DO_BEEP, 494, 300);
-            }
-            else {
-                // G-F-E-D-C
-                sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.DO_BEEP, 392, 100);
-                sendBTCmessage(200, BTCommunicator.DO_BEEP, 349, 100);
-                sendBTCmessage(400, BTCommunicator.DO_BEEP, 330, 100);
-                sendBTCmessage(600, BTCommunicator.DO_BEEP, 294, 100);
-                sendBTCmessage(800, BTCommunicator.DO_BEEP, 262, 300);
-            }
-        }
-
-        // MOTOR ACTION: forth an back
-        switch (mRobotType) {
-            
-            case R.id.robot_type_robogator:
-                // Robogator: bite the user in any case ;-)
-                for (int bite=0; bite<3; bite++) {
-                    sendBTCmessage(bite*400, motorAction, 
-                        75*directionAction, 0);
-                    sendBTCmessage(bite*400+200, motorAction, 
-                        -75*directionAction, 0);
-                }    
-                sendBTCmessage(3*400, motorAction, 0, 0);
-                break;
-                
-            case R.id.robot_type_lejos:
-                // lejosMINDdroid: just send the message for button press
-                sendBTCmessage(BTCommunicator.NO_DELAY, 
-                    BTCommunicator.DO_ACTION, buttonMode, 0);
-                break;                    
-        
-            default:
-                // other robots: 180 degrees forth and back
-                int direction = (buttonMode == ACTION_BUTTON_SHORT ? 1 : -1);                
-                sendBTCmessage(BTCommunicator.NO_DELAY, motorAction, 
-                    75*direction*directionAction, 0);
-                sendBTCmessage(500, motorAction, 
-                    -75*direction*directionAction, 0);
-                sendBTCmessage(1000, motorAction, 0, 0);
-                break;
-        }
-    }
-
-    /**
-     * Method for performing the appropriate action when the ACTION button is pressed shortly.
-     */
-    public void actionButtonPressed() {
-        if (myBTCommunicator != null) {
-          //  mView.getThread().mActionPressed = true;
-            performActionCommand(ACTION_BUTTON_SHORT);            
-        }
-    }
-
-    /**
-     * Method for performing the appropriate action when the ACTION button is long pressed.
-     */
-    public void actionButtonLongPress() {
-        if (myBTCommunicator != null) {
-           // mView.getThread().mActionPressed = true;
-            performActionCommand(ACTION_BUTTON_LONG);
-        }
-    }
-
-    /**
      * Starts a program on the NXT robot.
-     * @param name The program name to start. Has to end with .rxe on the LEGO firmware and with .nxj on the 
-     *             leJOS NXJ firmware.
-     */   
+     */
     public void startProgram(String name) {
         // for .rxe programs: get program name, eventually stop this and start the new one delayed
         // is handled in startRXEprogram()
         if (name.endsWith(".rxe")) {
-            programToStart = name;        
+            programToStart = name;
             sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.GET_PROGRAM_NAME, 0, 0);
             return;
         }
-              
-        // for .nxj programs: stop bluetooth communication after starting the program
-        if (name.endsWith(".nxj")) {
-            sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.START_PROGRAM, name);
-            destroyBTCommunicator();
-            return;
-        }        
 
-        // for all other programs: just start the program
+        // for all other programs: just start the program (.rpg are files created with NXT PROGRAM menu,
+        // .rso are sound files found in brick)
         sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.START_PROGRAM, name);
     }
 
     /**
      * Depending on the status (whether the program runs already) we stop it, wait and restart it again.
      * @param status The current status, 0x00 means that the program is already running.
-     */   
+     */
     public void startRXEprogram(byte status) {
         if (status == 0x00) {
             sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.STOP_PROGRAM, 0, 0);
             sendBTCmessage(1000, BTCommunicator.START_PROGRAM, programToStart);
-        }    
+        }
         else {
             sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.START_PROGRAM, programToStart);
         }
-    }        
+    }
+
+    private class DirectionButtonOnTouchListener implements View.OnTouchListener {
+        private double leftMotor;
+        private double rightMotor;
+
+        public DirectionButtonOnTouchListener(double l, double r) {
+            leftMotor = l;
+            rightMotor = r;
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            int action = event.getAction();
+            if (action == MotionEvent.ACTION_DOWN) {
+                updateMotorControl(leftMotor * power, rightMotor * power);
+            } else if ((action == MotionEvent.ACTION_UP) || (action == MotionEvent.ACTION_CANCEL)) {
+                updateMotorControl(0, 0);
+            }
+            return true;
+        }
+    }
 
     /**
      * Sends the motor control values to the communcation thread.
      * @param left The power of the left motor from 0 to 100.
      * @param right The power of the right motor from 0 to 100.
-     */   
-    public void updateMotorControl(int left, int right) {
+     */
+    public void updateMotorControl(double left, double right) {
 
         if (myBTCommunicator != null) {
             // don't send motor stop twice
@@ -343,11 +313,35 @@ public class MINDdroid extends Activity implements BTConnectable {
                     stopAlreadySent = true;
             }
             else
-                stopAlreadySent = false;         
-                        
+                stopAlreadySent = false;
+
             // send messages via the handler
-            sendBTCmessage(BTCommunicator.NO_DELAY, motorLeft, left * directionLeft, 0);
-            sendBTCmessage(BTCommunicator.NO_DELAY, motorRight, right * directionRight, 0);
+            sendBTCmessage(BTCommunicator.NO_DELAY, motorLeft, (int) (left * directionLeft), 0);
+            sendBTCmessage(BTCommunicator.NO_DELAY, motorRight, (int) (right * directionRight), 0);
+        }
+    }
+
+    /**
+     * Sends the motor control values to the communcation thread.
+     * @param left The power of the left motor from 0 to 100.
+     * @param right The power of the right motor from 0 to 100.
+     */
+    public void updateMotorControlTime(double left, double right, int duration) {
+
+        if (myBTCommunicator != null) {
+            // don't send motor stop twice
+            if ((left == 0) && (right == 0)) {
+                if (stopAlreadySent)
+                    return;
+                else
+                    stopAlreadySent = true;
+            }
+            else
+                stopAlreadySent = false;
+
+            // send messages via the handler
+            sendBTCmessage(BTCommunicator.NO_DELAY, motorLeft, (int) (left * directionLeft), duration);
+            sendBTCmessage(BTCommunicator.NO_DELAY, motorRight, (int) (right * directionRight), duration);
         }
     }
 
@@ -357,7 +351,7 @@ public class MINDdroid extends Activity implements BTConnectable {
      * @param message the message type (as defined in BTCommucator)
      * @param value1 first parameter
      * @param value2 second parameter
-     */   
+     */
     void sendBTCmessage(int delay, int message, int value1, int value2) {
         Bundle myBundle = new Bundle();
         myBundle.putInt("message", message);
@@ -407,14 +401,14 @@ public class MINDdroid extends Activity implements BTConnectable {
     @Override
     protected void onStart() {
         super.onStart();
-        
+
         // no bluetooth available
         if (BluetoothAdapter.getDefaultAdapter()==null) {
             showToast(R.string.bt_initialization_failure, Toast.LENGTH_LONG);
             destroyBTCommunicator();
             finish();
             return;
-        }            
+        }
 
         if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -432,7 +426,7 @@ public class MINDdroid extends Activity implements BTConnectable {
 
     @Override
     public void onPause() {
-      //  mView.unregisterListener();
+        //  mView.unregisterListener();
         destroyBTCommunicator();
         super.onStop();
     }
@@ -440,7 +434,7 @@ public class MINDdroid extends Activity implements BTConnectable {
     @Override
     public void onSaveInstanceState(Bundle icicle) {
         super.onSaveInstanceState(icicle);
-       // mView.unregisterListener();
+        // mView.unregisterListener();
     }
 
     /**
@@ -449,13 +443,14 @@ public class MINDdroid extends Activity implements BTConnectable {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         myMenu = menu;
-        myMenu.add(0, MENU_TOGGLE_CONNECT, 1, getResources().getString(R.string.connect)).setIcon(R.drawable.ic_menu_connect);
-        myMenu.add(0, MENU_START_SW, 2, getResources().getString(R.string.start)).setIcon(R.drawable.ic_menu_start);
-        myMenu.add(0, MENU_QUIT, 3, getResources().getString(R.string.quit)).setIcon(R.drawable.ic_menu_exit);
+        myMenu.add(0, MENU_TOGGLE_CONNECT, 1, getResources().getString(R.string.connect));
+        myMenu.add(0, MENU_START_SW, 2, getResources().getString(R.string.start));
+        myMenu.add(0, MENU_START_SOUND, 3, getResources().getString(R.string.sound));
+        myMenu.add(0, MENU_QUIT, 4, getResources().getString(R.string.quit));
         updateButtonsAndMenu();
         return true;
     }
-    
+
     /**
      * Enables/disables the menu items
      */
@@ -465,13 +460,14 @@ public class MINDdroid extends Activity implements BTConnectable {
         displayMenu = super.onPrepareOptionsMenu(menu);
         if (displayMenu) {
             boolean startEnabled = false;
-            if (myBTCommunicator != null) 
+            if (myBTCommunicator != null)
                 startEnabled = myBTCommunicator.isConnected();
             menu.findItem(MENU_START_SW).setEnabled(startEnabled);
+            menu.findItem(MENU_START_SOUND).setEnabled(startEnabled);
         }
         return displayMenu;
     }
-    
+
     /**
      * Handles item selections
      */
@@ -489,17 +485,27 @@ public class MINDdroid extends Activity implements BTConnectable {
                 }
 
                 return true;
-                
+
             case MENU_START_SW:
                 if (programList.size() == 0) {
                     showToast(R.string.no_programs_found, Toast.LENGTH_SHORT);
                     break;
                 }
-                
-                FileDialog myFileDialog = new FileDialog(this, programList);    		    	    		
-                myFileDialog.show(mRobotType == R.id.robot_type_lejos);
+
+                FileDialog myFileDialog = new FileDialog(this, programList);
+                myFileDialog.show(mRobotType == R.id.robot_type);
                 return true;
-                
+
+            case MENU_START_SOUND:
+                if (soundList.size() == 0) {
+                    showToast(R.string.no_programs_found, Toast.LENGTH_SHORT);
+                    break;
+                }
+
+                FileDialog mySounds = new FileDialog(this, soundList);
+                mySounds.show(mRobotType == R.id.robot_type_lejos);
+                return true;
+
             case MENU_QUIT:
                 destroyBTCommunicator();
                 finish();
@@ -535,7 +541,7 @@ public class MINDdroid extends Activity implements BTConnectable {
         reusableToast.setDuration(length);
         reusableToast.show();
     }
-    
+
     /**
      * Receive messages from the BTCommunicator
      */
@@ -549,17 +555,18 @@ public class MINDdroid extends Activity implements BTConnectable {
                 case BTCommunicator.STATE_CONNECTED:
                     connected = true;
                     programList = new ArrayList<String>();
+                    soundList = new ArrayList<String>();
                     connectingProgressDialog.dismiss();
                     updateButtonsAndMenu();
                     sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.GET_FIRMWARE_VERSION, 0, 0);
+                    sendBTCmessage(BTCommunicator.SHORT_DELAY, BTCommunicator.GET_BATTERY_LEVEL, 0, 0);
                     break;
                 case BTCommunicator.MOTOR_STATE:
 
                     if (myBTCommunicator != null) {
                         byte[] motorMessage = myBTCommunicator.getReturnMessage();
                         int position = byteToInt(motorMessage[21]) + (byteToInt(motorMessage[22]) << 8) + (byteToInt(motorMessage[23]) << 16)
-                                       + (byteToInt(motorMessage[24]) << 24);
-                        showToast(getResources().getString(R.string.current_position) + position, Toast.LENGTH_SHORT);
+                                + (byteToInt(motorMessage[24]) << 24);
                     }
 
                     break;
@@ -580,15 +587,15 @@ public class MINDdroid extends Activity implements BTConnectable {
                         // inform the user of the error with an AlertDialog
                         AlertDialog.Builder builder = new AlertDialog.Builder(thisActivity);
                         builder.setTitle(getResources().getString(R.string.bt_error_dialog_title))
-                        .setMessage(getResources().getString(R.string.bt_error_dialog_message)).setCancelable(false)
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                btErrorPending = false;
-                                dialog.cancel();
-                                selectNXT();
-                            }
-                        });
+                                .setMessage(getResources().getString(R.string.bt_error_dialog_message)).setCancelable(false)
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        btErrorPending = false;
+                                        dialog.cancel();
+                                        selectNXT();
+                                    }
+                                });
                         builder.create().show();
                     }
 
@@ -616,6 +623,12 @@ public class MINDdroid extends Activity implements BTConnectable {
 
                     break;
 
+                case BTCommunicator.GET_DEVICE_INFO:
+                    byte[] deviceMessage = myBTCommunicator.getReturnMessage();
+                    String deviceStr = new String(deviceMessage);
+                    deviceStr = deviceStr.replaceAll("\0", "");
+                    Log.e("Device info: ", deviceStr);
+                    break;
                 case BTCommunicator.FIND_FILES:
 
                     if (myBTCommunicator != null) {
@@ -623,35 +636,46 @@ public class MINDdroid extends Activity implements BTConnectable {
                         String fileName = new String(fileMessage, 4, 20);
                         fileName = fileName.replaceAll("\0","");
 
-                        if (mRobotType == R.id.robot_type_lejos || fileName.endsWith(".nxj") || fileName.endsWith(".rxe")) {
+                        if (mRobotType == R.id.robot_type_lejos || fileName.endsWith(".rxe") || fileName.endsWith(".rpg")) {
                             programList.add(fileName);
                         }
 
-                        // find next entry with appropriate handle, 
+                        if (fileName.endsWith(".rso")) {
+                            soundList.add(fileName);
+                        }
+
+                        // find next entry with appropriate handle,
                         // limit number of programs (in case of error (endless loop))
                         if (programList.size() <= MAX_PROGRAMS)
                             sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.FIND_FILES,
-                                           1, byteToInt(fileMessage[3]));
+                                    1, byteToInt(fileMessage[3]));
                     }
 
                     break;
-                    
+
                 case BTCommunicator.PROGRAM_NAME:
                     if (myBTCommunicator != null) {
                         byte[] returnMessage = myBTCommunicator.getReturnMessage();
                         startRXEprogram(returnMessage[2]);
                     }
-                    
+
                     break;
-                    
+
                 case BTCommunicator.VIBRATE_PHONE:
                     if (myBTCommunicator != null) {
                         byte[] vibrateMessage = myBTCommunicator.getReturnMessage();
                         Vibrator myVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                         myVibrator.vibrate(vibrateMessage[2]*10);
                     }
-                    
+
                     break;
+                case BTCommunicator.GET_BATTERY_LEVEL:
+                    if (myBTCommunicator != null){
+                        byte[] batteryMessage = myBTCommunicator.getReturnMessage();
+                        String batteryStr = new String(batteryMessage);
+                        Log.e("Battery level:", batteryStr);
+                        break;
+                    }
             }
         }
     };
@@ -682,9 +706,9 @@ public class MINDdroid extends Activity implements BTConnectable {
                     pairing = data.getExtras().getBoolean(DeviceListActivity.PAIRING);
                     startBTCommunicator(address);
                 }
-                
+
                 break;
-                
+
             case REQUEST_ENABLE_BT:
 
                 // When the request to enable Bluetooth returns
@@ -702,8 +726,354 @@ public class MINDdroid extends Activity implements BTConnectable {
                         finish();
                         break;
                 }
-                
+
                 break;
         }
+    }
+
+    public void changeIcon1(View view){
+        ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
+        registerForContextMenu(field1);
+        this.openContextMenu(field1);
+    }
+
+    public void changeIcon2(View view){
+        ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
+        registerForContextMenu(field2);
+        this.openContextMenu(field2);
+    }
+
+    public void changeIcon3(View view){
+        ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
+        registerForContextMenu(field3);
+        this.openContextMenu(field3);
+    }
+
+    public void changeIcon4(View view){
+        ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
+        registerForContextMenu(field4);
+        this.openContextMenu(field4);
+    }
+
+    public void changeIcon5(View view){
+        ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
+        registerForContextMenu(field5);
+        this.openContextMenu(field5);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, view, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_programovanie, menu);
+        buttonID = view.getId();
+        if (buttonID==R.id.Field1){
+            command1 = true;
+            command2 = false;
+            command3 = false;
+            command4 = false;
+            command5 = false;
+        } else if (buttonID==R.id.Field2){
+            command1 = false;
+            command2 = true;
+            command3 = false;
+            command4 = false;
+            command5 = false;
+        } else if (buttonID==R.id.Field3){
+            command1 = false;
+            command2 = false;
+            command3 = true;
+            command4 = false;
+            command5 = false;
+        } else if (buttonID==R.id.Field4){
+            command1 = false;
+            command2 = false;
+            command3 = false;
+            command4 = true;
+            command5 = false;
+        } else if (buttonID==R.id.Field5){
+            command1 = false;
+            command2 = false;
+            command3 = false;
+            command4 = false;
+            command5 = true;
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
+        ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
+        ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
+        ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
+        ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        if(command1){
+            switch (item.getItemId()) {
+                case R.id.left:
+                    field1.setImageResource(R.drawable.arrow_left);
+                    field1.setContentDescription("1");
+                    break;
+                case R.id.right:
+                    field1.setImageResource(R.drawable.arrow_right);
+                    field1.setContentDescription("2");
+                    break;
+                case R.id.forward:
+                    field1.setImageResource(R.drawable.arrow_up);
+                    field1.setContentDescription("3");
+                    break;
+                case R.id.backward:
+                    field1.setImageResource(R.drawable.arrow_down);
+                    field1.setContentDescription("4");
+                    break;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+        else if(command2){
+            switch (item.getItemId()) {
+                case R.id.left:
+                    field2.setImageResource(R.drawable.arrow_left);
+                    field2.setContentDescription("1");
+                    break;
+                case R.id.right:
+                    field2.setImageResource(R.drawable.arrow_right);
+                    field2.setContentDescription("2");
+                    break;
+                case R.id.forward:
+                    field2.setImageResource(R.drawable.arrow_up);
+                    field2.setContentDescription("3");
+                    break;
+                case R.id.backward:
+                    field2.setImageResource(R.drawable.arrow_down);
+                    field2.setContentDescription("4");
+                    break;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+        else if(command3){
+            switch (item.getItemId()) {
+                case R.id.left:
+                    field3.setImageResource(R.drawable.arrow_left);
+                    field3.setContentDescription("1");
+                    break;
+                case R.id.right:
+                    field3.setImageResource(R.drawable.arrow_right);
+                    field3.setContentDescription("2");
+                    break;
+                case R.id.forward:
+                    field3.setImageResource(R.drawable.arrow_up);
+                    field3.setContentDescription("3");
+                    break;
+                case R.id.backward:
+                    field3.setImageResource(R.drawable.arrow_down);
+                    field3.setContentDescription("4");
+                    break;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+        else if(command4){
+            switch (item.getItemId()) {
+                case R.id.left:
+                    field4.setImageResource(R.drawable.arrow_left);
+                    field4.setContentDescription("1");
+                    break;
+                case R.id.right:
+                    field4.setImageResource(R.drawable.arrow_right);
+                    field4.setContentDescription("2");
+                    break;
+                case R.id.forward:
+                    field4.setImageResource(R.drawable.arrow_up);
+                    field4.setContentDescription("3");
+                    break;
+                case R.id.backward:
+                    field4.setImageResource(R.drawable.arrow_down);
+                    field4.setContentDescription("4");
+                    break;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+        else if(command5){
+            switch (item.getItemId()) {
+                case R.id.left:
+                    field5.setImageResource(R.drawable.arrow_left);
+                    field5.setContentDescription("1");
+                    break;
+                case R.id.right:
+                    field5.setImageResource(R.drawable.arrow_right);
+                    field5.setContentDescription("2");
+                    break;
+                case R.id.forward:
+                    field5.setImageResource(R.drawable.arrow_up);
+                    field5.setContentDescription("3");
+                    break;
+                case R.id.backward:
+                    field5.setImageResource(R.drawable.arrow_down);
+                    field5.setContentDescription("4");
+                    break;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+        return false;
+    }
+
+    public void fieldMethod1(){
+        ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
+        EditText parameter1 = (EditText) findViewById(R.id.par1);
+        param1 = Integer.valueOf(String.valueOf(parameter1.getText()));
+        if(field1.getContentDescription() == "1"){
+            goLeft(param1);
+        } else if (field1.getContentDescription() == "2"){
+            goRight(param1);
+        } else if (field1.getContentDescription() == "3"){
+            goForward(param1);
+        } else if (field1.getContentDescription() == "4"){
+            goBackward(param1);
+        }
+    }
+
+    public void fieldMethod2(){
+        ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
+        EditText parameter2 = (EditText) findViewById(R.id.par2);
+        param2 = Integer.valueOf(String.valueOf(parameter2.getText()));
+        if(field2.getContentDescription() == "1"){
+            goLeft(param2);
+        } else if (field2.getContentDescription() == "2"){
+            goRight(param2);
+        } else if (field2.getContentDescription() == "3"){
+            goForward(param2);
+        } else if (field2.getContentDescription() == "4"){
+            goBackward(param2);
+        }
+    }
+
+    public void fieldMethod3(){
+        ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
+        EditText parameter3 = (EditText) findViewById(R.id.par3);
+        param3 = Integer.valueOf(String.valueOf(parameter3.getText()));
+        if(field3.getContentDescription() == "1"){
+            goLeft(param3);
+        } else if (field3.getContentDescription() == "2"){
+            goRight(param3);
+        } else if (field3.getContentDescription() == "3"){
+            goForward(param3);
+        } else if (field3.getContentDescription() == "4"){
+            goBackward(param3);
+        }
+    }
+
+    public void fieldMethod4(){
+        ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
+        EditText parameter4 = (EditText) findViewById(R.id.par4);
+        param4 = Integer.valueOf(String.valueOf(parameter4.getText()));
+        if(field4.getContentDescription() == "1"){
+            goLeft(param4);
+        } else if (field4.getContentDescription() == "2"){
+            goRight(param4);
+        } else if (field4.getContentDescription() == "3"){
+            goForward(param4);
+        } else if (field4.getContentDescription() == "4"){
+            goBackward(param4);
+        }
+    }
+
+    public void fieldMethod5(){
+        ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
+        EditText parameter5 = (EditText) findViewById(R.id.par5);
+        param5 = Integer.valueOf(String.valueOf(parameter5.getText()));
+        if(field5.getContentDescription() == "1"){
+            goLeft(param5);
+        } else if (field5.getContentDescription() == "2"){
+            goRight(param5);
+        } else if (field5.getContentDescription() == "3"){
+            goForward(param5);
+        } else if (field5.getContentDescription() == "4"){
+            goBackward(param5);
+        }
+    }
+
+    public void goForward(int param){
+        updateMotorControlTime(1 * power, 1 * power, param);
+        new CountDownTimer(param * 1000 - 1000, 1) {
+
+            public void onTick(long millisUntilFinished) {
+            }
+
+            public void onFinish() {
+                updateMotorControl(0, 0);
+            }
+        }.start();
+    }
+
+    public void goBackward(int param){
+        updateMotorControlTime(-1 * power, -1* power, param);
+        new CountDownTimer(param * 1000 - 1000, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+
+            public void onFinish() {
+                updateMotorControl(0, 0);
+            }
+        }.start();
+    }
+
+    /*
+    @param * 4 pre realne otocenie v °
+    Ak je @param : 1440 tak otocenie je 360°
+                    720 tak otocenie je 180°
+                    360 tak otocenie je 90°
+                    180 tak otocenie je 45°
+    V stranach, ktore su urcene
+     */
+    public void goLeft(int param){
+        //otocenie robota do lava, ziadne oneskorenie, pravy motor, param
+        sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.MOTOR_C_ACTION, param * 4, 0);
+    }
+
+    public void goRight(int param){
+        //otocenie robota do prava, ziadne oneskorenie, pravy motor, param
+        sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.MOTOR_B_ACTION, param * 4, 0);
+    }
+
+    public void startProgramovanie(View view){
+        //TODO kontrola ci sa nejedna o otocku a v tom pripade nepustit CountDownTimer
+        fieldMethod1();
+        new CountDownTimer(param1 * 1001 - 1000, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                fieldMethod2();
+                new CountDownTimer(param2 * 1001 - 1000, 1){
+                    public void onTick(long millisUntilFinished) {
+                    }
+                    public void onFinish() {
+                        fieldMethod3();
+                        new CountDownTimer(param3 * 1001 - 1000, 1){
+                            public void onTick(long millisUntilFinished) {
+                            }
+                            public void onFinish() {
+                                fieldMethod4();
+                                new CountDownTimer(param4 * 1001 - 1000, 1){
+                                    public void onTick(long millisUntilFinished) {
+                                    }
+                                    public void onFinish() {
+                                        fieldMethod5();
+                                    }
+                                }.start();
+                            }
+                        }.start();
+                    }
+                }.start();
+            }
+        }.start();
+    }
+
+    public void switchProgramovanie(View view){
+        setContentView(R.layout.programovanie);
     }
 }

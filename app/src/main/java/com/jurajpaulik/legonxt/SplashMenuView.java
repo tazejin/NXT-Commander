@@ -105,14 +105,11 @@ public class SplashMenuView extends View {
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
-			if (event.getY() > tutorialButtonYStart && event.getY() <= tutorialButtonYStart + ic_splash_tutorial.getHeight()) {
-				Tutorial tutorial = new Tutorial(mScreenWidth, mScreenWidth);
-				tutorial.show(splashMenuActivity);
-			} else if (event.getY() > startButtonYStart && event.getY() <= startButtonYStart + ic_splash_start.getHeight()) {
-				Intent playGame = new Intent(splashMenuActivity.getBaseContext(), MINDdroid.class);
-				playGame.putExtra(SplashMenu.MINDDROID_ROBOT_TYPE, ((SplashMenu)splashMenuActivity).getRobotType());
-				splashMenuActivity.startActivity(playGame);
-			}
+            if (event.getY() > startButtonYStart && event.getY() <= startButtonYStart + ic_splash_start.getHeight()) {
+                Intent playGame = new Intent(splashMenuActivity.getBaseContext(), MINDdroid.class);
+                playGame.putExtra(SplashMenu.MINDDROID_ROBOT_TYPE, ((SplashMenu)splashMenuActivity).getRobotType());
+                splashMenuActivity.startActivity(playGame);
+            }
 		}
 		return true;
 	}

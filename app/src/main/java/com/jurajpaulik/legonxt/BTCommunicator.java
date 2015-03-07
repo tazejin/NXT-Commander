@@ -44,12 +44,16 @@ public class BTCommunicator extends Thread {
     public static final int MOTOR_B = 1;
     public static final int MOTOR_C = 2;
     public static final int MOTOR_B_ACTION = 40;
+    public static final int MOTOR_C_ACTION = 41;
     public static final int MOTOR_RESET = 10;
     public static final int DO_BEEP = 51;
     public static final int DO_ACTION = 52;    
     public static final int READ_MOTOR_STATE = 60;
     public static final int GET_FIRMWARE_VERSION = 70;
     public static final int DISCONNECT = 99;
+    public static final int GET_BATTERY_LEVEL = 100;
+    public static final int GET_DEVICE_INFO = 101;
+    public static final int WAIT_SOME_TIME = 102;
 
     public static final int DISPLAY_TOAST = 1000;
     public static final int STATE_CONNECTED = 1001;
@@ -64,11 +68,14 @@ public class BTCommunicator extends Thread {
     public static final int STOP_PROGRAM = 1009;
     public static final int GET_PROGRAM_NAME = 1010;
     public static final int PROGRAM_NAME = 1011;
+    public static final int BATTERY_LEVEL = 1012;
+    public static final int DEVICE_INFO = 1013;
     public static final int SAY_TEXT = 1030;
     public static final int VIBRATE_PHONE = 1031;
-    public static final int TEST = 666;
 
     public static final int NO_DELAY = 0;
+    public static final int SHORT_DELAY = 1;
+    public static final int LONG_DELAY = 5;
 
     private static final UUID SERIAL_PORT_SERVICE_CLASS_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     // this is the only OUI registered by LEGO, see http://standards.ieee.org/regauth/oui/index.shtml
@@ -298,6 +305,16 @@ public class BTCommunicator extends Thread {
 
                 break;
 
+            case LCPMessage.GET_BATTERY_LEVEL:
+                if (message.length >= 2)
+                    if(message[2] == (byte)0x0B)
+                    sendState(BATTERY_LEVEL);
+                break;
+
+            case LCPMessage.GET_DEVICE_INFO:
+                if(message.length >= 7)
+                    sendState(DEVICE_INFO);
+                break;
             case LCPMessage.FIND_FIRST:
             case LCPMessage.FIND_NEXT:
 
@@ -387,6 +404,16 @@ public class BTCommunicator extends Thread {
         sendMessageAndState(message);
     }
 
+    private void getBatteryLevel(){
+        byte[] message = LCPMessage.getBatteryLevelMessage();
+        sendMessageAndState(message);
+    }
+
+    private void getDeviceInfo(){
+        byte[] message = LCPMessage.getDeviceInfoMessage();
+        sendMessageAndState(message);
+    }
+
     private void waitSomeTime(int millis) {
         try {
             Thread.sleep(millis);
@@ -414,11 +441,6 @@ public class BTCommunicator extends Thread {
         uiHandler.sendMessage(myMessage);
     }
 
-    private void doTest(){
-        byte[] message = {0x06, 0x00, (byte) 0x80, 0x03, 0x0B, 0x02, (byte) 0xF4, 0x01};
-            sendMessageAndState(message);
-    }
-
     // receive messages from the UI
     final Handler myHandler = new Handler() {
         @Override
@@ -434,6 +456,9 @@ public class BTCommunicator extends Thread {
                     break;
                 case MOTOR_B_ACTION:
                     rotateTo(MOTOR_B, myMessage.getData().getInt("value1"));
+                    break;
+                case MOTOR_C_ACTION:
+                    rotateTo(MOTOR_C, myMessage.getData().getInt("value1"));
                     break;
                 case MOTOR_RESET:
                     reset(myMessage.getData().getInt("value1"));
@@ -472,6 +497,15 @@ public class BTCommunicator extends Thread {
                         destroyNXTconnection();
                     }
                     catch (IOException e) { }
+                    break;
+                case GET_BATTERY_LEVEL:
+                    getBatteryLevel();
+                    break;
+                case GET_DEVICE_INFO:
+                    getDeviceInfo();
+                    break;
+                case WAIT_SOME_TIME:
+                    waitSomeTime(myMessage.getData().getInt("value1"));
                     break;
             }
         }

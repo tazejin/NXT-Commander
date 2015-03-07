@@ -23,7 +23,8 @@
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="start">Start Program</string>
-    <string name="quit">Quit</string>    
+    <string name="sound">Play Sound </string>
+    <string name="quit">Quit</string>
     <string name="action">Action!</string>   
     <string name="next">Next</string>
     <string name="options">Robot Type</string>  
@@ -254,5 +255,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_prehliadanie">Prehliadanie</string>
+    <string name="title_activity_programovanie">Programovanie</string>
+    <string name="title_activity_main_menu">MainMenu</string>
             
 </resources>

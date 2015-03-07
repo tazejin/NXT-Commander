@@ -40,7 +40,13 @@
         </activity>
         <activity
             android:name=".Ovladanie"
-            android:label="@string/title_activity_ovladanie" >
+            android:label="@string/title_activity_ovladanie"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".Programovanie"
+            android:label="@string/title_activity_programovanie"
+            android:screenOrientation="landscape">
         </activity>
     </application>
 

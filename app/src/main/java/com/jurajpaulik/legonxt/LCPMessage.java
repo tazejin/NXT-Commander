@@ -241,6 +241,24 @@ public class LCPMessage {
         return message;
     }
 
+    public static byte[] getBatteryLevelMessage(){
+        byte[] message = new byte[2];
+
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = GET_BATTERY_LEVEL;
+
+        return message;
+    }
+
+    public static byte[] getDeviceInfoMessage(){
+        byte[] message = new byte[20];
+
+        message[0] = SYSTEM_COMMAND_REPLY;
+        message[1] = GET_DEVICE_INFO;
+
+        return message;
+    }
+
     public static byte[] getFindFilesMessage(boolean findFirst, int handle, String searchString) {
         byte[] message;
 
