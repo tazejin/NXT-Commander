@@ -47,45 +47,45 @@ public class MINDdroid extends Activity implements BTConnectable {
     public static final int ACTION_BUTTON_SHORT = 0;
     public static final int ACTION_BUTTON_LONG = 1;
 
-    private static final int REQUEST_CONNECT_DEVICE = 1000;
-    private static final int REQUEST_ENABLE_BT = 2000;
-    private BTCommunicator myBTCommunicator = null;
-    private boolean connected = false;
-    private ProgressDialog connectingProgressDialog;
-    private Handler btcHandler;
-    private Menu myMenu;
-    private Activity thisActivity;
-    private boolean btErrorPending = false;
-    private boolean pairing;
-    private static boolean btOnByUs = false;
+    public static final int REQUEST_CONNECT_DEVICE = 1000;
+    public static final int REQUEST_ENABLE_BT = 2000;
+    public BTCommunicator myBTCommunicator = null;
+    public boolean connected = false;
+    public ProgressDialog connectingProgressDialog;
+    public Handler btcHandler;
+    public Menu myMenu;
+    public Activity thisActivity;
+    public boolean btErrorPending = false;
+    public boolean pairing;
+    public static boolean btOnByUs = false;
     int mRobotType;
     int motorLeft;
-    private int directionLeft; // +/- 1
+    public int directionLeft; // +/- 1
     int motorRight;
-    private boolean stopAlreadySent = false;
-    private int directionRight; // +/- 1
-    private int motorAction;
-    private int directionAction; // +/- 1
-    private List<String> programList;
-    private List<String> soundList;
-    private static final int MAX_PROGRAMS = 20;
-    private String programToStart;
-    private Toast reusableToast;
-    private int power = 80;
-    private boolean command1;
-    private boolean command2;
-    private boolean command3;
-    private boolean command4;
-    private boolean command5;
-    private int buttonID;
-    private double leftMotor;
-    private double rightMotor;
-    private int param;
-    private int param1;
-    private int param2;
-    private int param3;
-    private int param4;
-    private int param5;
+    public boolean stopAlreadySent = false;
+    public int directionRight; // +/- 1
+    public int motorAction;
+    public int directionAction; // +/- 1
+    public List<String> programList;
+    public List<String> soundList;
+    public static final int MAX_PROGRAMS = 20;
+    public String programToStart;
+    public Toast reusableToast;
+    public int power = 80;
+    public boolean command1;
+    public boolean command2;
+    public boolean command3;
+    public boolean command4;
+    public boolean command5;
+    public int buttonID;
+    public double leftMotor;
+    public double rightMotor;
+    public int param;
+    public int param1;
+    public int param2;
+    public int param3;
+    public int param4;
+    public int param5;
 
     /**
      * Asks if bluetooth was switched on during the runtime of the app. For saving 
@@ -138,16 +138,16 @@ public class MINDdroid extends Activity implements BTConnectable {
         ImageButton buttonRight = (ImageButton) findViewById(R.id.buttonRight);
         buttonRight.setOnTouchListener(new DirectionButtonOnTouchListener(-0.6, 0.6));
 
-        SeekBar powerSeekBar = (SeekBar) findViewById(R.id.power_seekbar);
+        final SeekBar powerSeekBar = (SeekBar) findViewById(R.id.power_seekbar);
         powerSeekBar.setProgress(power);
         powerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress,
                                           boolean fromUser) {
-                if (progress <= 25)
-                    progress = 25;
-                seekBar.setProgress(25);
-                power = progress;
+                if (powerSeekBar.getProgress() < 25){
+                    powerSeekBar.setProgress(25);
+                }
+                power = powerSeekBar.getProgress();
             }
 
             @Override
@@ -163,7 +163,7 @@ public class MINDdroid extends Activity implements BTConnectable {
     /**
      * Initialization of the motor commands for the different robot types.
      */
-    private void setUpByType() {
+    public void setUpByType() {
         switch (mRobotType) {
             default:
                 // default
@@ -178,7 +178,7 @@ public class MINDdroid extends Activity implements BTConnectable {
     /**
      * Updates the menus and possible buttons when connection status changed.
      */
-    private void updateButtonsAndMenu() {
+    public void updateButtonsAndMenu() {
 
         if (myMenu == null)
             return;
@@ -197,7 +197,7 @@ public class MINDdroid extends Activity implements BTConnectable {
     /**
      * Creates a new object for communication to the NXT robot via bluetooth and fetches the corresponding handler.
      */
-    private void createBTCommunicator() {
+    public void createBTCommunicator() {
         // interestingly BT adapter needs to be obtained by the UI thread - so we pass it in in the constructor
         myBTCommunicator = new BTCommunicator(this, myHandler, BluetoothAdapter.getDefaultAdapter(), getResources());
         btcHandler = myBTCommunicator.getHandler();
@@ -207,7 +207,7 @@ public class MINDdroid extends Activity implements BTConnectable {
      * Creates and starts the a thread for communication via bluetooth to the NXT robot.
      * @param mac_address The MAC address of the NXT robot.
      */
-    private void startBTCommunicator(String mac_address) {
+    public void startBTCommunicator(String mac_address) {
         connected = false;
         connectingProgressDialog = ProgressDialog.show(this, "", getResources().getString(R.string.connecting_please_wait), true);
 
@@ -276,9 +276,9 @@ public class MINDdroid extends Activity implements BTConnectable {
         }
     }
 
-    private class DirectionButtonOnTouchListener implements View.OnTouchListener {
-        private double leftMotor;
-        private double rightMotor;
+    public class DirectionButtonOnTouchListener implements View.OnTouchListener {
+        public double leftMotor;
+        public double rightMotor;
 
         public DirectionButtonOnTouchListener(double l, double r) {
             leftMotor = l;
@@ -525,7 +525,7 @@ public class MINDdroid extends Activity implements BTConnectable {
      * @param textToShow the message
      * @param length the length of the toast to display
      */
-    private void showToast(String textToShow, int length) {
+    public void showToast(String textToShow, int length) {
         reusableToast.setText(textToShow);
         reusableToast.setDuration(length);
         reusableToast.show();
@@ -536,7 +536,7 @@ public class MINDdroid extends Activity implements BTConnectable {
      * @param resID the ressource ID to display
      * @param length the length of the toast to display
      */
-    private void showToast(int resID, int length) {
+    public void showToast(int resID, int length) {
         reusableToast.setText(resID);
         reusableToast.setDuration(length);
         reusableToast.show();
@@ -680,7 +680,7 @@ public class MINDdroid extends Activity implements BTConnectable {
         }
     };
 
-    private int byteToInt(byte byteValue) {
+    public int byteToInt(byte byteValue) {
         int intValue = (byteValue & (byte) 0x7f);
 
         if ((byteValue & (byte) 0x80) != 0)
@@ -764,34 +764,40 @@ public class MINDdroid extends Activity implements BTConnectable {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_programovanie, menu);
+        MenuInflater inflater1 = getMenuInflater();
+        MenuInflater inflater2 = getMenuInflater();
         buttonID = view.getId();
+
         if (buttonID==R.id.Field1){
+            inflater1.inflate(R.menu.menu_programovanie, menu);
             command1 = true;
             command2 = false;
             command3 = false;
             command4 = false;
             command5 = false;
         } else if (buttonID==R.id.Field2){
+            inflater2.inflate(R.menu.menu_programovanie2, menu);
             command1 = false;
             command2 = true;
             command3 = false;
             command4 = false;
             command5 = false;
         } else if (buttonID==R.id.Field3){
+            inflater2.inflate(R.menu.menu_programovanie2, menu);
             command1 = false;
             command2 = false;
             command3 = true;
             command4 = false;
             command5 = false;
         } else if (buttonID==R.id.Field4){
+            inflater2.inflate(R.menu.menu_programovanie2, menu);
             command1 = false;
             command2 = false;
             command3 = false;
             command4 = true;
             command5 = false;
         } else if (buttonID==R.id.Field5){
+            inflater2.inflate(R.menu.menu_programovanie2, menu);
             command1 = false;
             command2 = false;
             command3 = false;
@@ -919,17 +925,17 @@ public class MINDdroid extends Activity implements BTConnectable {
                     return super.onContextItemSelected(item);
             }
         }
-        return false;
+        return true;
     }
 
     public void fieldMethod1(){
         ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
         EditText parameter1 = (EditText) findViewById(R.id.par1);
-        param1 = Integer.valueOf(String.valueOf(parameter1.getText()));
+        param1 = Integer.parseInt(String.valueOf(parameter1.getText()));
         if(field1.getContentDescription() == "1"){
-            goLeft(param1);
+            goLeftForward(param1);
         } else if (field1.getContentDescription() == "2"){
-            goRight(param1);
+            goRightForward(param1);
         } else if (field1.getContentDescription() == "3"){
             goForward(param1);
         } else if (field1.getContentDescription() == "4"){
@@ -940,11 +946,11 @@ public class MINDdroid extends Activity implements BTConnectable {
     public void fieldMethod2(){
         ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
         EditText parameter2 = (EditText) findViewById(R.id.par2);
-        param2 = Integer.valueOf(String.valueOf(parameter2.getText()));
+        param2 = Integer.parseInt(String.valueOf(parameter2.getText()));
         if(field2.getContentDescription() == "1"){
-            goLeft(param2);
+            goLeftForward(param2);
         } else if (field2.getContentDescription() == "2"){
-            goRight(param2);
+            goRightForward(param2);
         } else if (field2.getContentDescription() == "3"){
             goForward(param2);
         } else if (field2.getContentDescription() == "4"){
@@ -955,11 +961,11 @@ public class MINDdroid extends Activity implements BTConnectable {
     public void fieldMethod3(){
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
         EditText parameter3 = (EditText) findViewById(R.id.par3);
-        param3 = Integer.valueOf(String.valueOf(parameter3.getText()));
+        param3 = Integer.parseInt(String.valueOf(parameter3.getText()));
         if(field3.getContentDescription() == "1"){
-            goLeft(param3);
+            goLeftForward(param3);
         } else if (field3.getContentDescription() == "2"){
-            goRight(param3);
+            goRightForward(param3);
         } else if (field3.getContentDescription() == "3"){
             goForward(param3);
         } else if (field3.getContentDescription() == "4"){
@@ -970,11 +976,11 @@ public class MINDdroid extends Activity implements BTConnectable {
     public void fieldMethod4(){
         ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
         EditText parameter4 = (EditText) findViewById(R.id.par4);
-        param4 = Integer.valueOf(String.valueOf(parameter4.getText()));
+        param4 = Integer.parseInt(String.valueOf(parameter4.getText()));
         if(field4.getContentDescription() == "1"){
-            goLeft(param4);
+            goLeftForward(param4);
         } else if (field4.getContentDescription() == "2"){
-            goRight(param4);
+            goRightForward(param4);
         } else if (field4.getContentDescription() == "3"){
             goForward(param4);
         } else if (field4.getContentDescription() == "4"){
@@ -985,11 +991,11 @@ public class MINDdroid extends Activity implements BTConnectable {
     public void fieldMethod5(){
         ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
         EditText parameter5 = (EditText) findViewById(R.id.par5);
-        param5 = Integer.valueOf(String.valueOf(parameter5.getText()));
+        param5 = Integer.parseInt(String.valueOf(parameter5.getText()));
         if(field5.getContentDescription() == "1"){
-            goLeft(param5);
+            goLeftForward(param5);
         } else if (field5.getContentDescription() == "2"){
-            goRight(param5);
+            goRightForward(param5);
         } else if (field5.getContentDescription() == "3"){
             goForward(param5);
         } else if (field5.getContentDescription() == "4"){
@@ -1030,18 +1036,17 @@ public class MINDdroid extends Activity implements BTConnectable {
                     180 tak otocenie je 45°
     V stranach, ktore su urcene
      */
-    public void goLeft(int param){
+    public void goLeftForward(int param){
         //otocenie robota do lava, ziadne oneskorenie, pravy motor, param
-        sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.MOTOR_C_ACTION, param * 4, 0);
+        sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.MOTOR_C_ACTION, -180, 1);
     }
 
-    public void goRight(int param){
+    public void goRightForward(int param){
         //otocenie robota do prava, ziadne oneskorenie, pravy motor, param
-        sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.MOTOR_B_ACTION, param * 4, 0);
+        sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.MOTOR_B_ACTION, 180, 1);
     }
 
     public void startProgramovanie(View view){
-        //TODO kontrola ci sa nejedna o otocku a v tom pripade nepustit CountDownTimer
         fieldMethod1();
         new CountDownTimer(param1 * 1001 - 1000, 1){
             public void onTick(long millisUntilFinished) {
