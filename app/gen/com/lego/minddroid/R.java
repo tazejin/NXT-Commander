@@ -155,8 +155,8 @@ public final class R {
         public static final int robot_type_robogator=0x7f050059;
         public static final int robot_type_shooterbot=0x7f050057;
         public static final int robot_type_tribot=0x7f050058;
-        /**   DeviceListActivity 
-  DeviceListActivity 
+        /**   ZoznamZariadeni
+  ZoznamZariadeni
          */
         public static final int scanning=0x7f05001f;
         public static final int select_device=0x7f050020;

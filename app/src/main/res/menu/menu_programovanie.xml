@@ -4,8 +4,17 @@
     tools:context="com.jurajpaulik.legonxt.Programovanie">
     <item android:id="@+id/forward"
         android:icon="@drawable/arrow_up"
-        android:title="Up"/>
+        android:title="@string/forward"/>
     <item android:id="@+id/backward"
         android:icon="@drawable/arrow_down"
-        android:title="Down"/>
+        android:title="@string/backward"/>
+    <item android:id="@+id/left"
+        android:icon="@drawable/arrow_left"
+        android:title="@string/turnLeft"/>
+    <item android:id="@+id/right"
+        android:icon="@drawable/arrow_right"
+        android:title="@string/turnRight"/>
+    <item android:id="@+id/wait"
+        android:icon="@drawable/wait"
+        android:title="@string/wait" />
 </menu>

@@ -1,0 +1,66 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="com.jurajpaulik.legonxt.Ovladanie"
+    android:background="#ffffffff">
+
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonLeft"
+        android:src="@drawable/arrow_left"
+        android:background="#ffffffff"
+        android:layout_below="@+id/buttonUp"
+        android:layout_toLeftOf="@+id/buttonUp"
+        android:layout_toStartOf="@+id/buttonUp" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonDown"
+        android:src="@drawable/arrow_down"
+        android:background="#ffffffff"
+        android:layout_below="@+id/buttonRight"
+        android:layout_alignLeft="@+id/buttonUp"
+        android:layout_alignStart="@+id/buttonUp" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonUp"
+        android:src="@drawable/arrow_up"
+        android:background="#ffffffff"
+        android:layout_below="@+id/power_seekbar"
+        android:layout_centerHorizontal="true" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonRight"
+        android:src="@drawable/arrow_right"
+        android:background="#ffffffff"
+        android:layout_below="@+id/buttonUp"
+        android:layout_toRightOf="@+id/buttonDown"
+        android:layout_toEndOf="@+id/buttonDown" />
+
+    <TextView android:id="@+id/textViewPower"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/speed"
+        android:textSize="18sp">
+    </TextView>
+
+    <SeekBar android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:id="@+id/power_seekbar"
+        android:max="100"
+        android:layout_below="@+id/textViewPower"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+    </SeekBar>
+
+</RelativeLayout>
