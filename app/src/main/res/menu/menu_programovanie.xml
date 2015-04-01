@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.jurajpaulik.legonxt.Programovanie">
+    tools:context="com.jurajpaulik.nxtcommander.Programovanie">
     <item android:id="@+id/forward"
         android:icon="@drawable/arrow_up"
         android:title="@string/forward"/>

@@ -1,8 +1,4 @@
-package com.jurajpaulik.legonxt;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+package com.jurajpaulik.nxtcommander;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -10,37 +6,32 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
+import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
-//TODO prehadzovanie menu, na mobile SGS4 to ide ale pri tabletoch sa cely system zmenil a musim pridat actionbar
-//TODO po zmene menu by sa mali spravne vypichovat medzi sebou
-//TODO prist na nejake ine metody a optimalizaciu niektorych zlych metod
-//TODO treba najst sposob ako citat spravne udaje zo senzorov a pridat ich do programovania (ak bude cas) + monitorovanie
-//TODO opravenie toho vypinania BT
-//TODO pri zvoleni zatocenia odstranit pole nazadanie casu
-// Tato trieda sluzi na komunikaciu s LEGO NXT robotom a ovladanim ho cez bluetooth
-// Komunikacia s robotom prebieha cez LCP (Lego Communication protocol)
-public class Main extends Activity implements BTPripojenie {
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-    public static final int MENU_TOGGLE_CONNECT = Menu.FIRST;
-    public static final int MENU_PROGRAMOVANIE = Menu.FIRST + 1;
-    public static final int MENU_CONTROLS = Menu.FIRST + 2;
-    public static final int MENU_START_SW = Menu.FIRST + 3;
-    public static final int MENU_START_SOUND = Menu.FIRST + 4;
+
+public class Main extends Activity implements BTPripojenie{
 
     public static final int REQUEST_CONNECT_DEVICE = 1000;
     public static final int REQUEST_ENABLE_BT = 2000;
@@ -48,7 +39,6 @@ public class Main extends Activity implements BTPripojenie {
     public boolean connected = false;
     public ProgressDialog connectingProgressDialog;
     public Handler btcHandler;
-    public Menu myMenu;
     public Activity thisActivity;
     public boolean btErrorPending = false;
     public boolean pairing;
@@ -79,6 +69,61 @@ public class Main extends Activity implements BTPripojenie {
     public int param4;
     public int param5;
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_ovladanie, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        //return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            // po stlaceni connect/disconnect spravime metody, kt. su spiate s nazvom
+            case R.id.connect:
+                if (myBTKomunikacia == null || !connected) {
+                    selectNXT();
+                } else {
+                    destroyBTCommunicator();
+                }
+                return true;
+            // po kliknuti na ovladani zmizne z menu a objavi sa programovanie, updatneme menu
+            // a nadstavime content view na ovladanie
+            case R.id.controls:
+                setContentView(R.layout.ovladanie);
+                nastavenieListenerov();
+                napravaSeekBaru();
+                switchMonitor();
+                return true;
+            // po kliknuti na programovanie zmizne z menu, objavi sa ovladanie, updatneme menu
+            // a nadstavime content view na programovanie
+            case R.id.programming:
+                setContentView(R.layout.programovanie);
+                return true;
+            // po kliknuti na spustenie programu vypiseme hlasku ak nenajdeme subory
+            // inak ich ukazeme v dialogu
+            case R.id.startSw:
+                if (programList.size() == 0) {
+                    showToast(R.string.no_programs_found, Toast.LENGTH_SHORT);
+                    break;
+                }
+                Subory mySubory = new Subory(this, programList);
+                mySubory.show();
+                return true;
+            // po kliknuti na prehranie zvuku vypiseme hlasku ak nejajdeme ziadne
+            // inak ich ukazeme v dialogu
+            case R.id.playSound:
+                if (soundList.size() == 0) {
+                    showToast(R.string.no_sound_found, Toast.LENGTH_SHORT);
+                    break;
+                }
+                Subory mySounds = new Subory(this, soundList);
+                mySounds.show();
+                return true;
+        }
+        return false;
+    }
 
     // Ak bol BT zapnuty pocas nasej aplikacie, tak po jej ukonceni ho aj vypneme
     public static boolean BTcezAPP() {
@@ -100,11 +145,13 @@ public class Main extends Activity implements BTPripojenie {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         thisActivity = this;
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
         // nadstavenie na nase hlavne okno / ovladanie
         setContentView(R.layout.ovladanie);
         super.onStart();
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+
+        TextView speedV = (TextView) findViewById(R.id.speedText);
+        speedV.setText(String.valueOf(power));
 
         // nadstavenie motorov pri klasickom zapojeni
         motorLeft = BTKomunikacia.MOTOR_B;
@@ -112,6 +159,40 @@ public class Main extends Activity implements BTPripojenie {
         motorRight = BTKomunikacia.MOTOR_C;
         directionRight = 1;
 
+        nastavenieListenerov();
+        napravaSeekBaru();
+        switchMonitor();
+    }
+
+    public void napravaSeekBaru(){
+        // deklarovanie SeekBaru na indikaciu "rychlosti"
+        final SeekBar powerSeekBar = (SeekBar) findViewById(R.id.power_seekbar);
+        powerSeekBar.setProgress(power);
+        powerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                                          boolean fromUser) {
+                // ak pri zmene je SeekBar na mensiu hodnote nez 25 ju nadstavime na 25
+                // je to hodnota, pri ktorej sa robot aspon trochu pohne
+                if (powerSeekBar.getProgress() < 25){
+                    powerSeekBar.setProgress(25);
+                }
+                power = powerSeekBar.getProgress();
+                TextView speedV = (TextView) findViewById(R.id.speedText);
+                speedV.setText(String.valueOf(power));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+    }
+
+    public void nastavenieListenerov(){
         // nadstavenie hodnot pre plynule ovladanie, podla parametrov sa generuju data posielane
         // do nxt kocky, ktora podla toho otaca motor
         // motor berie hodnotu od -100 do 100
@@ -125,44 +206,43 @@ public class Main extends Activity implements BTPripojenie {
         buttonDown.setOnTouchListener(new DirectionButtonOnTouchListener(-1, -1));
         ImageButton buttonRight = (ImageButton) findViewById(R.id.buttonRight);
         buttonRight.setOnTouchListener(new DirectionButtonOnTouchListener(-0.5, 0.5));
-
-        // deklarovanie SeekBaru na indikaciu "rychlosti"
-        final SeekBar powerSeekBar = (SeekBar) findViewById(R.id.power_seekbar);
-        powerSeekBar.setProgress(power);
-        powerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress,
-                                          boolean fromUser) {
-                // ak pri zmene je SeekBar na mensej hodnote nez 25, tak ju nadstavime na 25
-                // je to hodnota, pri ktorej sa robot aspon trochu pohne
-                if (powerSeekBar.getProgress() < 25){
-                    powerSeekBar.setProgress(25);
-                }
-                power = powerSeekBar.getProgress();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
     }
 
-    // ak sa pripojime k robotovi tak inicializujeme a updatneme menu
-    public void updateButtonsAndMenu() {
-        if (myMenu == null)
-            return;
+    public void switchMonitor(){
+        Switch switchM = (Switch) findViewById(R.id.switchMonitoring);
+        final TextView textBattery = (TextView) findViewById(R.id.textBattery);
+        final TextView textSound = (TextView) findViewById(R.id.textSound);
+        final TextView textTouch = (TextView) findViewById(R.id.textTouch);
+        final TextView textLight = (TextView) findViewById(R.id.textLight);
+        final TextView textLightSenzor = (TextView) findViewById(R.id.lightSenzor);
+        final TextView textTouchSenzor = (TextView) findViewById(R.id.touchSenzor);
+        final TextView textSoundSenzor = (TextView) findViewById(R.id.soundSenzor);
+        final TextView textBatterySenzor = (TextView) findViewById(R.id.batterySenzor);
 
-        myMenu.removeItem(MENU_TOGGLE_CONNECT);
-        myMenu.removeItem(MENU_CONTROLS);
-        if (connected) {
-            myMenu.add(0, MENU_TOGGLE_CONNECT, 1, getResources().getString(R.string.disconnect));
-        } else {
-            myMenu.add(0, MENU_TOGGLE_CONNECT, 1, getResources().getString(R.string.connect));
-        }
+        switchM.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (compoundButton.isChecked()){
+                    textBattery.setVisibility(View.VISIBLE);
+                    textSound.setVisibility(View.VISIBLE);
+                    textTouch.setVisibility(View.VISIBLE);
+                    textLight.setVisibility(View.VISIBLE);
+                    textLightSenzor.setVisibility(View.VISIBLE);
+                    textTouchSenzor.setVisibility(View.VISIBLE);
+                    textSoundSenzor.setVisibility(View.VISIBLE);
+                    textBatterySenzor.setVisibility(View.VISIBLE);
+                }else{
+                    textBattery.setVisibility(View.INVISIBLE);
+                    textSound.setVisibility(View.INVISIBLE);
+                    textTouch.setVisibility(View.INVISIBLE);
+                    textLight.setVisibility(View.INVISIBLE);
+                    textLightSenzor.setVisibility(View.INVISIBLE);
+                    textTouchSenzor.setVisibility(View.INVISIBLE);
+                    textSoundSenzor.setVisibility(View.INVISIBLE);
+                    textBatterySenzor.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
     }
 
     // Vytvorenie noveho objektu pre komunikaciu s NXT robotom a odchytavanie handlerov
@@ -186,7 +266,6 @@ public class Main extends Activity implements BTPripojenie {
         createBTCommunicator();
         myBTKomunikacia.setMACAddress(mac_address);
         myBTKomunikacia.start();
-        updateButtonsAndMenu();
     }
 
     // poslanie spravy na ukoncenie vlakna
@@ -198,13 +277,12 @@ public class Main extends Activity implements BTPripojenie {
         }
 
         connected = false;
-        updateButtonsAndMenu();
     }
 
     // vratenie aktualneho stavu pripojenia k robotovi
-    //public boolean isConnected() {
-     //   return connected;
-   // }
+    public boolean isConnected() {
+       return connected;
+    }
 
     // spustenie programu priamo v kocke
     public void startProgram(String name) {
@@ -368,82 +446,6 @@ public class Main extends Activity implements BTPripojenie {
         super.onSaveInstanceState(icicle);
     }
 
-    // Vytvorenie menu a pridani itemov do vnutra
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        myMenu = menu;
-        myMenu.add(0, MENU_TOGGLE_CONNECT, 1, getResources().getString(R.string.connect));
-        myMenu.add(0, MENU_PROGRAMOVANIE, 2, getResources().getString(R.string.programovanie));
-        myMenu.add(0, MENU_CONTROLS, 3, getResources().getString(R.string.ovladanie));
-        myMenu.add(0, MENU_START_SW, 4, getResources().getString(R.string.start));
-        myMenu.add(0, MENU_START_SOUND, 5, getResources().getString(R.string.sound));
-        updateButtonsAndMenu();
-        return true;
-    }
-
-
-    // Vypinanie a zapinanie menu itemov
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        boolean displayMenu;
-        displayMenu = super.onPrepareOptionsMenu(menu);
-        if (displayMenu) {
-            boolean startEnabled = false;
-            if (myBTKomunikacia != null)
-                startEnabled = myBTKomunikacia.isConnected();
-            menu.findItem(MENU_START_SW).setEnabled(startEnabled);
-            menu.findItem(MENU_START_SOUND).setEnabled(startEnabled);
-        }
-        return displayMenu;
-    }
-
-    // handler pre stlacenie menu itemov
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            // po stlaceni connect/disconnect spravime metody, kt. su spiate s nazvom
-            case MENU_TOGGLE_CONNECT:
-                if (myBTKomunikacia == null || !connected) {
-                    selectNXT();
-                } else {
-                    destroyBTCommunicator();
-                    updateButtonsAndMenu();
-                }
-                return true;
-            // po kliknuti na ovladani zmizne z menu a objavi sa programovanie, updatneme menu
-            // a nadstavime content view na ovladanie
-            case MENU_CONTROLS:
-                setContentView(R.layout.ovladanie);
-                return true;
-            // po kliknuti na programovanie zmizne z menu, objavi sa ovladanie, updatneme menu
-            // a nadstavime content view na programovanie
-            case MENU_PROGRAMOVANIE:
-                setContentView(R.layout.programovanie);
-                return true;
-            // po kliknuti na spustenie programu vypiseme hlasku ak nenajdeme subory
-            // inak ich ukazeme v dialogu
-            case MENU_START_SW:
-                if (programList.size() == 0) {
-                    showToast(R.string.no_programs_found, Toast.LENGTH_SHORT);
-                    break;
-                }
-                Subory mySubory = new Subory(this, programList);
-                mySubory.show();
-                return true;
-            // po kliknuti na prehranie zvuku vypiseme hlasku ak nejajdeme ziadne
-            // inak ich ukazeme v dialogu
-            case MENU_START_SOUND:
-                if (soundList.size() == 0) {
-                    showToast(R.string.no_sound_found, Toast.LENGTH_SHORT);
-                    break;
-                }
-                Subory mySounds = new Subory(this, soundList);
-                mySounds.show();
-                return true;
-        }
-        return false;
-    }
-
     // zobrazenie spravy ako toast
     // posielame parametre textu, ktory zobrazime a dlzku zobrazenia
     public void showToast(String textToShow, int length) {
@@ -476,7 +478,6 @@ public class Main extends Activity implements BTPripojenie {
                     programList = new ArrayList<>();
                     soundList = new ArrayList<>();
                     connectingProgressDialog.dismiss();
-                    updateButtonsAndMenu();
                     sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_FIRMWARE_VERSION, 0, 0);
                     sendBTCmessage(BTKomunikacia.SHORT_DELAY, BTKomunikacia.GET_BATTERY_STATE, 0, 0);
                     break;
@@ -486,7 +487,7 @@ public class Main extends Activity implements BTPripojenie {
                     if (myBTKomunikacia != null) {
                         byte[] motorMessage = myBTKomunikacia.getReturnMessage();
                         int position = byteToInt(motorMessage[21]) + (byteToInt(motorMessage[22]) << 8)
-                           + (byteToInt(motorMessage[23]) << 16) + (byteToInt(motorMessage[24]) << 24);
+                                + (byteToInt(motorMessage[23]) << 16) + (byteToInt(motorMessage[24]) << 24);
                     }
                     break;
                 // ak prijimeme chybovu spravu o parovani, dame prec dialog a zrusime komunikator
@@ -555,6 +556,8 @@ public class Main extends Activity implements BTPripojenie {
                         if (programList.size() <= MAX_PROGRAMS)
                             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES,
                                     1, byteToInt(fileMessage[3]));
+                        Log.e("programy v kocke: ", String.valueOf(programList));
+                        Log.e("zvuky v kocke: ", String.valueOf(soundList));
                     }
                     break;
                 // sprava na zistenie stavu baterie
@@ -562,6 +565,7 @@ public class Main extends Activity implements BTPripojenie {
                     if (myBTKomunikacia != null){
                         byte[] batteryMessage = myBTKomunikacia.getReturnMessage();
                         String batteryStr = new String(batteryMessage);
+                        Log.e("baterka: ", batteryStr);
                         break;
                     }
             }
@@ -654,18 +658,48 @@ public class Main extends Activity implements BTPripojenie {
 
     // po vytvoreni context menu
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+    public void onCreateContextMenu(ContextMenu cMenu, View view, ContextMenu.ContextMenuInfo cMenuInfo) {
         // naplnime ho
-        super.onCreateContextMenu(menu, view, menuInfo);
+        super.onCreateContextMenu(cMenu, view, cMenuInfo);
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_programovanie, menu);
+        inflater.inflate(R.menu.menu_programovanie, cMenu);
         buttonID = view.getId();
 
-        command1 = true; command2 = true; command3 = true; command4 = true; command5 = true;
+        if (buttonID==R.id.Field1){
+            command1 = true;
+            command2 = false;
+            command3 = false;
+            command4 = false;
+            command5 = false;
+        } else if (buttonID==R.id.Field2){
+            command1 = false;
+            command2 = true;
+            command3 = false;
+            command4 = false;
+            command5 = false;
+        } else if (buttonID==R.id.Field3){
+            command1 = false;
+            command2 = false;
+            command3 = true;
+            command4 = false;
+            command5 = false;
+        } else if (buttonID==R.id.Field4){
+            command1 = false;
+            command2 = false;
+            command3 = false;
+            command4 = true;
+            command5 = false;
+        } else if (buttonID==R.id.Field5){
+            command1 = false;
+            command2 = false;
+            command3 = false;
+            command4 = false;
+            command5 = true;
+        }
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
+    public boolean onContextItemSelected(MenuItem cItem) {
         ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
         ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
@@ -675,7 +709,7 @@ public class Main extends Activity implements BTPripojenie {
         // zistenie na kazdom buttone, na co sme klikli a podla toho nadstavime "ikonu"
         // a nadstavime flag v podobe cisla, kt. neskor pouzijeme na zistenie metody na vykonanie
         if(command1){
-            switch (item.getItemId()) {
+            switch (cItem.getItemId()) {
                 case R.id.left:
                     field1.setImageResource(R.drawable.arrow_left);
                     field1.setContentDescription("1");
@@ -697,11 +731,11 @@ public class Main extends Activity implements BTPripojenie {
                     field1.setContentDescription("5");
                     break;
                 default:
-                    return super.onContextItemSelected(item);
+                    return super.onContextItemSelected(cItem);
             }
         }
         else if(command2){
-            switch (item.getItemId()) {
+            switch (cItem.getItemId()) {
                 case R.id.left:
                     field2.setImageResource(R.drawable.arrow_left);
                     field2.setContentDescription("1");
@@ -723,11 +757,11 @@ public class Main extends Activity implements BTPripojenie {
                     field2.setContentDescription("5");
                     break;
                 default:
-                    return super.onContextItemSelected(item);
+                    return super.onContextItemSelected(cItem);
             }
         }
         else if(command3){
-            switch (item.getItemId()) {
+            switch (cItem.getItemId()) {
                 case R.id.left:
                     field3.setImageResource(R.drawable.arrow_left);
                     field3.setContentDescription("1");
@@ -749,11 +783,11 @@ public class Main extends Activity implements BTPripojenie {
                     field3.setContentDescription("5");
                     break;
                 default:
-                    return super.onContextItemSelected(item);
+                    return super.onContextItemSelected(cItem);
             }
         }
         else if(command4){
-            switch (item.getItemId()) {
+            switch (cItem.getItemId()) {
                 case R.id.left:
                     field4.setImageResource(R.drawable.arrow_left);
                     field4.setContentDescription("1");
@@ -775,11 +809,11 @@ public class Main extends Activity implements BTPripojenie {
                     field4.setContentDescription("5");
                     break;
                 default:
-                    return super.onContextItemSelected(item);
+                    return super.onContextItemSelected(cItem);
             }
         }
         else if(command5){
-            switch (item.getItemId()) {
+            switch (cItem.getItemId()) {
                 case R.id.left:
                     field5.setImageResource(R.drawable.arrow_left);
                     field5.setContentDescription("1");
@@ -801,7 +835,7 @@ public class Main extends Activity implements BTPripojenie {
                     field5.setContentDescription("5");
                     break;
                 default:
-                    return super.onContextItemSelected(item);
+                    return super.onContextItemSelected(cItem);
             }
         }
         return true;

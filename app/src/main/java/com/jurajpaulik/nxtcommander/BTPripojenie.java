@@ -1,4 +1,4 @@
-package com.jurajpaulik.legonxt;
+package com.jurajpaulik.nxtcommander;
 
 public interface BTPripojenie {
 

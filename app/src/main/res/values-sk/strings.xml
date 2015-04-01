@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ovládanie NXT</string>
-    <string name="action_settings">Nadstavenia</string>
+    <string name="app_name">NXT Commander</string>
+    <string name="action_settings">Nastavenia</string>
     <string name="bt_error_dialog_message">Nemôžem sa pripojiť k NXT robotovi. Uistite sa. že robot je zapnutý a robot v ňom tiež.</string>
     <string name="bt_error_dialog_title">Bluetooth chyba:</string>
     <string name="bt_initialization_failure">Bluetooth nie je podporovaný.</string>
@@ -37,9 +37,14 @@
     <string name="vyhladavanie">Hľadám NXT robotov</string>
     <string name="wait_till_bt_on">Zapínam Bluetooth na pripojenie s NXT robotom.</string>
     <string name="ziadne_parovane">Neboli spárované žiadne roboty.</string>
-    <string name="Wait">Čakaj</string>
+    <string name="wait">Čakaj</string>
     <string name="backward">Vzad</string>
     <string name="forward">Vpred</string>
     <string name="turnLeft">Zatoč vľavo</string>
     <string name="turnRight">Zatoč vpravo</string>
+    <string name="monitoring">Monitorovanie</string>
+    <string name="batteryLevel">Hladina batérie:</string>
+    <string name="lightLevel">Úroveň svetla:</string>
+    <string name="soundLevel">Úroveň hluku:</string>
+    <string name="touchLevel">Stav dotykového senzora:</string>
 </resources>

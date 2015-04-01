@@ -1,7 +1,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.jurajpaulik.legonxt.Ovladanie">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="always" />
+    tools:context=".Ovladanie">
+    <item android:id="@+id/connect"
+        android:title="@string/connect"
+        android:showAsAction="always" />
+    <item android:id="@+id/programming"
+        android:title="@string/programovanie"
+        android:showAsAction="always" />
+    <item android:id="@+id/controls"
+        android:title="@string/ovladanie"
+        android:showAsAction="always" />
+    <item android:id="@+id/startSw"
+        android:title="@string/start"
+        android:showAsAction="always" />
+    <item android:id="@+id/playSound"
+        android:title="@string/sound"
+        android:showAsAction="always" />
 </menu>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="nxt_default_name">NXT</string>
-    <string name="app_name">Ovládanie NXT</string>
+    <string name="app_name">NXT Commander</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="start">Start Program</string>
@@ -14,8 +14,15 @@
     <string name="backward">Backward</string>
     <string name="turnLeft">Turn Left</string>
     <string name="turnRight">Turn Right</string>
-    <string name="Wait">Wait</string>
-    
+    <string name="wait">Wait</string>
+    <string name="monitoring">Monitoring</string>
+
+    <!-- Stringy pre senzory -->
+    <string name="batteryLevel">Battery Level:</string>
+    <string name="lightLevel">Light Level:</string>
+    <string name="soundLevel">Sound Level:</string>
+    <string name="touchLevel">Touch State:</string>
+
     <!-- Spravy ohladom suborov -->
     <string name="no_programs_found">No programs found in NXT brick.</string>
     <string name="no_sound_found">No sound files found in NXT brick.</string>

@@ -1,4 +1,4 @@
-package com.jurajpaulik.legonxt;
+package com.jurajpaulik.nxtcommander;
 
 import java.util.Iterator;
 import java.util.List;

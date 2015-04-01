@@ -1,4 +1,4 @@
-package com.jurajpaulik.legonxt;
+package com.jurajpaulik.nxtcommander;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -235,22 +235,13 @@ public class BTKomunikacia extends Thread {
     // prijatu spravu porovnavame s preddefinovanymi z LEGO prirucky
     private void dispatchMessage(byte[] message) {
         switch (message[1]) {
-            case LCPSpravy.GET_INPUT_STATE:
+            case LCPSpravy.GET_OUTPUT_STATE:
                 if (message.length >= 25)
                     sendState(STATE_MOTOR);
                 break;
             case LCPSpravy.GET_FIRMWARE_VERSION:
                 if (message.length >= 7)
                     sendState(FIRMWARE_VERSION);
-                break;
-            case LCPSpravy.GET_BATTERY_STATE:
-                if (message.length >= 2)
-                    if(message[2] == (byte)0x0B)
-                    sendState(BATTERY_INFO);
-                break;
-            case LCPSpravy.GET_DEVICE_INFO:
-                if(message.length >= 7)
-                    sendState(NXT_INFO);
                 break;
             case LCPSpravy.FIND_FIRST:
             case LCPSpravy.FIND_NEXT:

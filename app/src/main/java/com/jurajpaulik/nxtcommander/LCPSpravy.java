@@ -1,4 +1,4 @@
-package com.jurajpaulik.legonxt;
+package com.jurajpaulik.nxtcommander;
 
 // Trieda na uchovavanie LCP sprav (aby sme si nemuseli pamatat vsetky bajtove polia)
 public class LCPSpravy {
@@ -14,7 +14,7 @@ public class LCPSpravy {
     public static final byte START_PROGRAM = 0x00; // spusti program
     public static final byte PLAY_TONE = 0x03; // prehra ton
     public static final byte SET_OUTPUT_STATE = 0x04; // nadstavenie vystupneho stavu
-    public static final byte GET_INPUT_STATE = 0x06; // ziskanie vstupneho stavu
+    public static final byte GET_OUTPUT_STATE = 0x06; // ziskanie vystupneho stavu
     public static final byte RESET_MOTOR_POSITION = 0x0A; // resetovanie pozicie motora
     public static final byte GET_BATTERY_STATE = 0x0B; // ziskanie stavu baterie
     public static final byte GET_CURRENT_PROGRAM_NAME = 0x11; // ziskanie nazvu beziaceho programu
@@ -132,7 +132,7 @@ public class LCPSpravy {
         byte[] message = new byte[3];
 
         message[0] = DIRECT_COMMAND_REPLY;
-        message[1] = GET_INPUT_STATE;
+        message[1] = GET_OUTPUT_STATE;
         // Vystupny port motora
         message[2] = (byte) motor;
 
