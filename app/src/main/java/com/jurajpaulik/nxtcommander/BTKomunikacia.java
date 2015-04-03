@@ -21,6 +21,7 @@ public class BTKomunikacia extends Thread {
     public static final int MOTOR_A = 0;
     public static final int MOTOR_B = 1;
     public static final int MOTOR_C = 2;
+    public static final int MOTOR_ALL = 0xFF;
     public static final int MOTOR_RESET = 10;
     public static final int DO_BEEP = 51;
     public static final int READ_MOTOR_STATE = 60;
@@ -29,6 +30,14 @@ public class BTKomunikacia extends Thread {
     public static final int GET_BATTERY_STATE = 100;
     public static final int GET_DEVICE_INFO = 101;
     public static final int WAIT = 102;
+    public static final int GET_TOUCH_INFO = 103;
+    public static final int GET_SOUND_INFO = 104;
+    public static final int GET_LIGHT_INFO = 105;
+    public static final int GET_ULTRASONIC_INFO = 106;
+    public static final int SET_ULTRA = 107;
+    public static final int SET_SOUND = 108;
+    public static final int SET_LIGHT = 109;
+    public static final int SET_TOUCH = 110;
 
     public static final int SHOW_MESSAGE = 1000;
     public static final int STATE_CONNECTED = 1001;
@@ -45,6 +54,15 @@ public class BTKomunikacia extends Thread {
     public static final int PROGRAM_NAME = 1011;
     public static final int BATTERY_INFO = 1012;
     public static final int NXT_INFO = 1013;
+    public static final int TOUCH_DATA = 1014;
+    public static final int SOUND_DATA = 1015;
+    public static final int LIGHT_DATA = 1016;
+    public static final int ULTRASONIC_DATA = 1017;
+    public static final int DB = 0;
+    public static final int DBA = 1;
+    public static final int LIGHT_INACTIVE = 0;
+    public static final int REFLECTION = 1;
+    public static final int LIGHT_ACTIVE = 2;
 
     public static final int NO_DELAY = 0;
     public static final int SHORT_DELAY = 1;
@@ -243,6 +261,9 @@ public class BTKomunikacia extends Thread {
                 if (message.length >= 7)
                     sendState(FIRMWARE_VERSION);
                 break;
+            case LCPSpravy.GET_BATTERY_STATE:
+                if (message.length >= 5)
+                    sendState(BATTERY_INFO);
             case LCPSpravy.FIND_FIRST:
             case LCPSpravy.FIND_NEXT:
                 if (message.length >= 28) {
@@ -255,6 +276,18 @@ public class BTKomunikacia extends Thread {
                     sendState(PROGRAM_NAME);
                 }
                 break;
+            case LCPSpravy.GET_INPUT_MODE:
+                if (message.length >= 16){
+                if (message[3] == 0){
+                    sendState(TOUCH_DATA);
+                } else if (message[3] == 1){
+                    sendState(SOUND_DATA);
+                } else if (message[3] == 2){
+                    sendState(LIGHT_DATA);
+                } else if (message[3] == 3){
+                    sendState(ULTRASONIC_DATA);
+                } break;
+            }
         }
     }
 
@@ -325,6 +358,46 @@ public class BTKomunikacia extends Thread {
         sendMessageAndState(message);
     }
 
+    private void getTouchInfo(){
+        byte[] message = LCPSpravy.getTouchMessage();
+        sendMessageAndState(message);
+    }
+
+    private void getSoundInfo(){
+        byte[] message = LCPSpravy.getSoundMessage();
+        sendMessageAndState(message);
+    }
+
+    private void getLightInfo(){
+        byte[] message = LCPSpravy.getLightMessage();
+        sendMessageAndState(message);
+    }
+
+    private void getUltrasonicInfo(){
+        byte[] message = LCPSpravy.getUltrasonicMessage();
+        sendMessageAndState(message);
+    }
+
+    public void setSoundSensor(int type){
+        byte[] message = LCPSpravy.setSoundMessage(type);
+        sendMessageAndState(message);
+    }
+
+    public void setLightSensor(int type){
+        byte[] message = LCPSpravy.setLightMessage(type);
+        sendMessageAndState(message);
+    }
+
+    public void setUltraSensor(){
+        byte[] message = LCPSpravy.setUltraMessage();
+        sendMessageAndState(message);
+    }
+
+    public void setTouchSensor(){
+        byte[] message = LCPSpravy.setTouchMessage();
+        sendMessageAndState(message);
+    }
+
     // metoda na pockanie urciteho casu
     private void waitSomeTime(int millis) {
         try {
@@ -364,8 +437,15 @@ public class BTKomunikacia extends Thread {
             int message;
             switch (message = myMessage.getData().getInt("message")) {
                 case MOTOR_A:
+                    changeMotorSpeed(message, myMessage.getData().getInt("value1"));
+                    break;
                 case MOTOR_B:
+                    changeMotorSpeed(message, myMessage.getData().getInt("value1"));
+                    break;
                 case MOTOR_C:
+                    changeMotorSpeed(message, myMessage.getData().getInt("value1"));
+                    break;
+                case MOTOR_ALL:
                     changeMotorSpeed(message, myMessage.getData().getInt("value1"));
                     break;
                 case MOTOR_RESET:
@@ -394,6 +474,7 @@ public class BTKomunikacia extends Thread {
                     changeMotorSpeed(MOTOR_A, 0);
                     changeMotorSpeed(MOTOR_B, 0);
                     changeMotorSpeed(MOTOR_C, 0);
+                    changeMotorSpeed(MOTOR_ALL, 0);
                     waitSomeTime(500);
                     try {
                         destroyNXTconnection();
@@ -408,6 +489,30 @@ public class BTKomunikacia extends Thread {
                     break;
                 case WAIT:
                     waitSomeTime(myMessage.getData().getInt("value1"));
+                    break;
+                case GET_TOUCH_INFO:
+                    getTouchInfo();
+                    break;
+                case GET_SOUND_INFO:
+                    getSoundInfo();
+                    break;
+                case GET_LIGHT_INFO:
+                    getLightInfo();
+                    break;
+                case GET_ULTRASONIC_INFO:
+                    getUltrasonicInfo();
+                    break;
+                case SET_SOUND:
+                    setSoundSensor(myMessage.getData().getInt("value1"));
+                    break;
+                case SET_LIGHT:
+                    setLightSensor(myMessage.getData().getInt("value1"));
+                    break;
+                case SET_ULTRA:
+                    setUltraSensor();
+                    break;
+                case SET_TOUCH:
+                    setTouchSensor();
                     break;
             }
         }

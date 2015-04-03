@@ -26,7 +26,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +53,8 @@ public class Main extends Activity implements BTPripojenie{
     int motorRight;
     public boolean stopAlreadySent = false;
     public int directionRight; // +/- 1
+    public int directionAll;
+    int motorAll;
     public List<String> programList;
     public List<String> soundList;
     public static final int MAX_PROGRAMS = 20;
@@ -62,12 +69,21 @@ public class Main extends Activity implements BTPripojenie{
     public int buttonID;
     public double leftMotor;
     public double rightMotor;
+    public double allMotor;
     public int param;
     public int param1;
     public int param2;
     public int param3;
     public int param4;
     public int param5;
+    public float currentMiliVolts;
+    public String dotykovySenzor;
+    public int currentSoundL;
+    public String zvukovySenzor;
+    public int currentLightL;
+    public String svetelnySenzor;
+    public int currentUltrasonicL;
+    public String ultrazvukovySenzor;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -79,6 +95,7 @@ public class Main extends Activity implements BTPripojenie{
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //return super.onOptionsItemSelected(item);
+        Switch mojSwitch = (Switch) findViewById(R.id.switchMonitoring);
         switch (item.getItemId()) {
             // po stlaceni connect/disconnect spravime metody, kt. su spiate s nazvom
             case R.id.connect:
@@ -87,6 +104,9 @@ public class Main extends Activity implements BTPripojenie{
                 } else {
                     destroyBTCommunicator();
                 }
+                return true;
+            case R.id.disconnect:
+                destroyBTCommunicator();
                 return true;
             // po kliknuti na ovladani zmizne z menu a objavi sa programovanie, updatneme menu
             // a nadstavime content view na ovladanie
@@ -99,6 +119,8 @@ public class Main extends Activity implements BTPripojenie{
             // po kliknuti na programovanie zmizne z menu, objavi sa ovladanie, updatneme menu
             // a nadstavime content view na programovanie
             case R.id.programming:
+                if (mojSwitch.isChecked())
+                mojSwitch.setChecked(false);
                 setContentView(R.layout.programovanie);
                 return true;
             // po kliknuti na spustenie programu vypiseme hlasku ak nenajdeme subory
@@ -158,6 +180,8 @@ public class Main extends Activity implements BTPripojenie{
         directionLeft = 1;
         motorRight = BTKomunikacia.MOTOR_C;
         directionRight = 1;
+        motorAll = BTKomunikacia.MOTOR_ALL;
+        directionAll = 1;
 
         nastavenieListenerov();
         napravaSeekBaru();
@@ -214,10 +238,12 @@ public class Main extends Activity implements BTPripojenie{
         final TextView textSound = (TextView) findViewById(R.id.textSound);
         final TextView textTouch = (TextView) findViewById(R.id.textTouch);
         final TextView textLight = (TextView) findViewById(R.id.textLight);
+        //final TextView textUltra = (TextView) findViewById(R.id.textUltra);
         final TextView textLightSenzor = (TextView) findViewById(R.id.lightSenzor);
         final TextView textTouchSenzor = (TextView) findViewById(R.id.touchSenzor);
         final TextView textSoundSenzor = (TextView) findViewById(R.id.soundSenzor);
         final TextView textBatterySenzor = (TextView) findViewById(R.id.batterySenzor);
+        //final TextView textUltraSenzor = (TextView) findViewById(R.id.ultraSenzor);
 
         switchM.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -227,19 +253,38 @@ public class Main extends Activity implements BTPripojenie{
                     textSound.setVisibility(View.VISIBLE);
                     textTouch.setVisibility(View.VISIBLE);
                     textLight.setVisibility(View.VISIBLE);
+                    //textUltra.setVisibility(View.VISIBLE);
                     textLightSenzor.setVisibility(View.VISIBLE);
                     textTouchSenzor.setVisibility(View.VISIBLE);
                     textSoundSenzor.setVisibility(View.VISIBLE);
                     textBatterySenzor.setVisibility(View.VISIBLE);
+                    //textUltraSenzor.setVisibility(View.VISIBLE);
+                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
+                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
+                    //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_ULTRA, 0, 0);
+                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_TOUCH, 0, 0);
+                    dHandler.postDelayed(dRunnable, 100);
+                    bHandler.postDelayed(bRunnable, 100);
+                    sHandler.postDelayed(sRunnable, 100);
+                    zHandler.postDelayed(zRunnable, 100);
+                    //uHandler.postDelayed(uRunnable, 100);
                 }else{
                     textBattery.setVisibility(View.INVISIBLE);
                     textSound.setVisibility(View.INVISIBLE);
                     textTouch.setVisibility(View.INVISIBLE);
                     textLight.setVisibility(View.INVISIBLE);
+                    //textUltra.setVisibility(View.INVISIBLE);
                     textLightSenzor.setVisibility(View.INVISIBLE);
                     textTouchSenzor.setVisibility(View.INVISIBLE);
                     textSoundSenzor.setVisibility(View.INVISIBLE);
                     textBatterySenzor.setVisibility(View.INVISIBLE);
+                    //textUltraSenzor.setVisibility(View.INVISIBLE);
+                    dHandler.removeCallbacks(dRunnable);
+                    bHandler.removeCallbacks(bRunnable);
+                    sHandler.removeCallbacks(sRunnable);
+                    zHandler.removeCallbacks(zRunnable);
+                    //uHandler.removeCallbacks(uRunnable);
+                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
                 }
             }
         });
@@ -478,8 +523,9 @@ public class Main extends Activity implements BTPripojenie{
                     programList = new ArrayList<>();
                     soundList = new ArrayList<>();
                     connectingProgressDialog.dismiss();
-                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_FIRMWARE_VERSION, 0, 0);
-                    sendBTCmessage(BTKomunikacia.SHORT_DELAY, BTKomunikacia.GET_BATTERY_STATE, 0, 0);
+                    //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_FIRMWARE_VERSION, 0, 0);
+                    // nasledne prehladame robota a vsetky subory v nom
+                    //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES, 0, 0);
                     break;
                 // po prijati spravy o stave motora ak sme pripojeny k nxt tak vratime spravu
                 // o pozicii motora
@@ -526,15 +572,18 @@ public class Main extends Activity implements BTPripojenie{
                 case BTKomunikacia.FIRMWARE_VERSION:
                     if (myBTKomunikacia != null) {
                         byte[] firmwareMessage = myBTKomunikacia.getReturnMessage();
-                        // nasledne prehladame robota a vsetky subory v nom
-                        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES, 0, 0);
+                        String minorVersionProtocol = String.valueOf(firmwareMessage[3]);
+                        String majorVersionProtocol = String.valueOf(firmwareMessage[4]);
+                        String minorVersionFirmware = String.valueOf(firmwareMessage[5]);
+                        String majorVersionFirmware = String.valueOf(firmwareMessage[6]);
+
+                        String firmwareVersion = "Protocol: " + majorVersionProtocol + "." + minorVersionProtocol +
+                                "\n" + "Firmware: " + majorVersionFirmware + "." + minorVersionFirmware;
                     }
                     break;
                 // zistenie informacii o robotovi (meno, BT adresa, BT signal, volna pamat)
                 case BTKomunikacia.GET_DEVICE_INFO:
                     byte[] deviceMessage = myBTKomunikacia.getReturnMessage();
-                    String deviceStr = new String(deviceMessage);
-                    deviceStr = deviceStr.replaceAll("\0", "");
                     break;
                 // najdene suborov
                 case BTKomunikacia.FIND_FILES:
@@ -556,18 +605,98 @@ public class Main extends Activity implements BTPripojenie{
                         if (programList.size() <= MAX_PROGRAMS)
                             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES,
                                     1, byteToInt(fileMessage[3]));
-                        Log.e("programy v kocke: ", String.valueOf(programList));
-                        Log.e("zvuky v kocke: ", String.valueOf(soundList));
                     }
                     break;
                 // sprava na zistenie stavu baterie
-                case BTKomunikacia.GET_BATTERY_STATE:
+                case BTKomunikacia.BATTERY_INFO:
                     if (myBTKomunikacia != null){
                         byte[] batteryMessage = myBTKomunikacia.getReturnMessage();
-                        String batteryStr = new String(batteryMessage);
-                        Log.e("baterka: ", batteryStr);
+                        if (batteryMessage[1] == 0x0B) {
+                            byte cbyte[] = new byte[2];
+                            cbyte[0] = batteryMessage[3];
+                            cbyte[1] = batteryMessage[4];
+
+                            currentMiliVolts = Math.round(fromBytes(cbyte) / 100);
+                        }
                         break;
                     }
+                case BTKomunikacia.TOUCH_DATA:
+                    if (myBTKomunikacia != null){
+                        byte[] touchMessage = myBTKomunikacia.getReturnMessage();
+                        int nestlaceny = -1;
+                        int stlaceny = -73;
+
+                        if (touchMessage[3] == 0) {
+                            String touchData = String.valueOf(touchMessage[8]);
+
+                        if(touchData == String.valueOf(nestlaceny)){
+                            dotykovySenzor = getResources().getString(R.string.touch0);
+                                } else if (touchData == String.valueOf(stlaceny)){
+                                    dotykovySenzor = getResources().getString(R.string.touch1);
+                            }
+                        }
+                    }
+                    break;
+                case BTKomunikacia.SOUND_DATA:
+                    if (myBTKomunikacia != null){
+                        byte[] soundMessage = myBTKomunikacia.getReturnMessage();
+
+                        if(soundMessage[3] == 1){
+                            byte cbyte[] = new byte[2];
+                            cbyte[0] = soundMessage[10];
+                            cbyte[1] = soundMessage[11];
+
+                            currentSoundL = (fromBytes(cbyte)*100) / 1023;
+                        }
+                    }
+                    break;
+                case BTKomunikacia.LIGHT_DATA:
+                    if (myBTKomunikacia != null){
+                        byte[] lightMessage = myBTKomunikacia.getReturnMessage();
+
+                        if (lightMessage[3] == 2) {
+                            byte cbyte[] = new byte[2];
+                            cbyte[0] = lightMessage[10];
+                            cbyte[1] = lightMessage[11];
+
+                            currentLightL = (fromBytes(cbyte)*100) / 1023;
+                        }
+                    }
+                    break;
+                case BTKomunikacia.ULTRASONIC_DATA:
+                    if (myBTKomunikacia != null){
+                        byte[] ultrasonicMessage = myBTKomunikacia.getReturnMessage();
+
+                        if (ultrasonicMessage[3] == 3) {
+                            String UltraType = String.valueOf(ultrasonicMessage[6]);
+                            String UltraMode = String.valueOf(ultrasonicMessage[7]);
+                            String status = String.valueOf(ultrasonicMessage[2]);
+                            String raw1 = String.valueOf(ultrasonicMessage[8]);
+                            String raw2 = String.valueOf(ultrasonicMessage[9]);
+                            String norm1 = String.valueOf(ultrasonicMessage[10]);
+                            String norm2 = String.valueOf(ultrasonicMessage[11]);
+                            String scale1 = String.valueOf(ultrasonicMessage[12]);
+                            String scale2 = String.valueOf(ultrasonicMessage[13]);
+                            String cali1 = String.valueOf(ultrasonicMessage[14]);
+                            String cali2 = String.valueOf(ultrasonicMessage[15]);
+
+                            byte cbyte[] = new byte[2];
+                            cbyte[0] = ultrasonicMessage[10];
+                            cbyte[1] = ultrasonicMessage[11];
+
+                            currentUltrasonicL = fromBytes(cbyte);
+
+                            Log.e("UltrasensorType: ", UltraType);
+                            Log.e("UltrasensorMode: ", UltraMode);
+                            //Log.e("Status: ", status);
+
+                            String udaje = raw1+" "+raw2+" "+norm1+" "+norm2+" "+
+                                    scale1+" "+scale2+" "+cali1+" "+cali2;
+                            Log.e("Udaje: ", String.valueOf(currentUltrasonicL));
+                            Log.e("Udaje2: ", udaje);
+                        }
+                    }
+                    break;
             }
         }
     };
@@ -579,6 +708,39 @@ public class Main extends Activity implements BTPripojenie{
         if ((byteValue & (byte) 0x80) != 0)
             intValue |= 0x80;
         return intValue;
+    }
+
+    public static int fromBytes(byte cbyte[])
+    {
+        ByteBuffer bytebuffer = ByteBuffer.wrap(cbyte);
+        bytebuffer.order(ByteOrder.LITTLE_ENDIAN);
+        if (cbyte.length == 2)
+        {
+            return bytebuffer.getShort();
+        }
+        if (cbyte.length == 4)
+        {
+            return bytebuffer.getInt();
+        } else
+        {
+            return 0;
+        }
+    }
+
+    public void udajeTouch(){
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_TOUCH_INFO, 0, 0);
+    }
+
+    public void udajeSound(){
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_SOUND_INFO, 0, 0);
+    }
+
+    public void udajeLight(){
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_LIGHT_INFO, 0, 0);
+    }
+
+    public void udajeUltrasonic(){
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_ULTRASONIC_INFO, 0, 0);
     }
 
     // najdenie NXT zariadenia
@@ -1044,4 +1206,63 @@ public class Main extends Activity implements BTPripojenie{
             }
         }.start();
     }
+
+
+    private Handler dHandler = new Handler();
+    private Handler bHandler = new Handler();
+    private Handler sHandler = new Handler();
+    private Handler zHandler = new Handler();
+    //private Handler uHandler = new Handler();
+
+    private Runnable dRunnable = new Runnable() {
+        @Override
+        public void run() {
+            TextView dotyk = (TextView) findViewById(R.id.touchSenzor);
+            udajeTouch();
+            dotyk.setText(dotykovySenzor);
+            dHandler.postDelayed(this, 100);
+        }
+    };
+
+    private Runnable bRunnable = new Runnable() {
+        @Override
+        public void run() {
+            TextView baterka = (TextView) findViewById(R.id.batterySenzor);
+            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_BATTERY_STATE, 0, 0);
+            baterka.setText(String.valueOf((int)currentMiliVolts) + "%");
+            bHandler.postDelayed(this, 1000);
+        }
+    };
+
+    private Runnable sRunnable = new Runnable() {
+        @Override
+        public void run() {
+            TextView svetlo = (TextView) findViewById(R.id.lightSenzor);
+            udajeLight();
+            svetelnySenzor = String.valueOf(currentLightL);
+            svetlo.setText(svetelnySenzor + "%");
+            sHandler.postDelayed(this, 150);
+        }
+    };
+
+    private Runnable zRunnable = new Runnable() {
+        @Override
+        public void run() {
+            TextView zvuk = (TextView) findViewById(R.id.soundSenzor);
+            udajeSound();
+            zvukovySenzor = String.valueOf(currentSoundL);
+            if(Integer.parseInt(zvukovySenzor) >= 100)
+                zvukovySenzor = String.valueOf(100);
+            zvuk.setText(zvukovySenzor + "%");
+            zHandler.postDelayed(this, 180);
+        }
+    };
+
+    /*private Runnable uRunnable = new Runnable() {
+        @Override
+        public void run() {
+            udajeUltrasonic();
+            uHandler.postDelayed(this, 200);
+        }
+    };*/
 }

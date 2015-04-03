@@ -18,6 +18,12 @@ public class LCPSpravy {
     public static final byte RESET_MOTOR_POSITION = 0x0A; // resetovanie pozicie motora
     public static final byte GET_BATTERY_STATE = 0x0B; // ziskanie stavu baterie
     public static final byte GET_CURRENT_PROGRAM_NAME = 0x11; // ziskanie nazvu beziaceho programu
+    public static final byte GET_INPUT_MODE = 0x07;
+    public static final byte SET_INPUT_MODE = 0x05;
+    public static final int PORT0_TOUCH = 0;
+    public static final int PORT1_SOUND = 1;
+    public static final int PORT2_LIGHT = 2;
+    public static final int PORT3_ULTRASONIC = 3;
 
     // Systemove prikazy, ktore riadia kocku
     public static final byte FIND_FIRST = (byte)0x86; // najdi prvy (subor)
@@ -193,6 +199,100 @@ public class LCPSpravy {
             message[1] = FIND_NEXT;
             message[2] = (byte) handle;
         }
+        return message;
+    }
+
+    public static byte[] getTouchMessage(){
+        byte[] message = new byte[3];
+
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = GET_INPUT_MODE;
+        message[2] = (byte) PORT0_TOUCH;
+
+        return message;
+    }
+
+    public static byte[] getSoundMessage(){
+        byte[] message = new byte[3];
+
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = GET_INPUT_MODE;
+        message[2] = (byte) PORT1_SOUND;
+
+        return message;
+    }
+
+    public static byte[] getLightMessage(){
+        byte[] message = new byte[3];
+
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = GET_INPUT_MODE;
+        message[2] = (byte) PORT2_LIGHT;
+
+        return message;
+    }
+
+    public static byte[] getUltrasonicMessage(){
+        byte[] message = new byte[3];
+
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = GET_INPUT_MODE;
+        message[2] = (byte) PORT3_ULTRASONIC;
+
+        return message;
+    }
+
+    public static byte[] setLightMessage(int type){
+        byte[] message = new byte[5];
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = SET_INPUT_MODE;
+        message[2] = (byte) PORT2_LIGHT;
+
+        if(type == 0)
+            message[3] = (byte) 0x06;
+        else if (type == 1)
+            message[3] = (byte) 0x03;
+        else if (type == 2)
+            message[3] = (byte) 0x05;
+        message[4] = (byte) 0x00;
+
+        return message;
+    }
+
+    public static byte[] setSoundMessage(int type){
+        byte[] message = new byte[5];
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = SET_INPUT_MODE;
+        message[2] = (byte) PORT1_SOUND;
+
+        if(type == 0)
+            message[3] = (byte) 0x07;
+        else if (type == 1)
+            message[3] = (byte) 0x08;
+        message[4] = (byte) 0x00;
+
+        return message;
+    }
+
+    public static byte[] setUltraMessage(){
+        byte[] message = new byte[5];
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = SET_INPUT_MODE;
+        message[2] = (byte) PORT3_ULTRASONIC;
+        message[3] = (byte) 0x0B;
+        message[4] = (byte) 0x00;
+
+        return message;
+    }
+
+    public static byte[] setTouchMessage(){
+        byte[] message = new byte[5];
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = SET_INPUT_MODE;
+        message[2] = (byte) PORT0_TOUCH;
+        message[3] = (byte) 0x01;
+        message[4] = (byte) 0x20;
+
         return message;
     }
 }

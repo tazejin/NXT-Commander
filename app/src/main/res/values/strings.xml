@@ -22,6 +22,9 @@
     <string name="lightLevel">Light Level:</string>
     <string name="soundLevel">Sound Level:</string>
     <string name="touchLevel">Touch State:</string>
+    <string name="ultraLevel">Distance:</string>
+    <string name="touch0"> Not Pressed</string>
+    <string name="touch1"> Pressed</string>
 
     <!-- Spravy ohladom suborov -->
     <string name="no_programs_found">No programs found in NXT brick.</string>

@@ -20,7 +20,7 @@
         </activity>
         <activity
             android:name="com.jurajpaulik.nxtcommander.Main"
-            android:label="@string/title_activity_ovladanie"
+            android:label="NXT Commander"
             android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
             android:screenOrientation="landscape">
             <intent-filter>

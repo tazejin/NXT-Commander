@@ -5,6 +5,9 @@
     <item android:id="@+id/connect"
         android:title="@string/connect"
         android:showAsAction="always" />
+    <item android:id="@+id/disconnect"
+        android:title="@string/disconnect"
+        android:showAsAction="always" />
     <item android:id="@+id/programming"
         android:title="@string/programovanie"
         android:showAsAction="always" />
