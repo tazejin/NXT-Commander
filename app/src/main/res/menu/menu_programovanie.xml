@@ -16,5 +16,14 @@
         android:title="@string/turnRight"/>
     <item android:id="@+id/wait"
         android:icon="@drawable/wait"
-        android:title="@string/wait" />
+        android:title="@string/wait"/>
+    <item android:id="@+id/touchPressed"
+        android:icon="@drawable/touch_pressed"
+        android:title="@string/touchSensor"/>
+    <item android:id="@+id/sound"
+        android:icon="@drawable/sound"
+        android:title="@string/soundSensor"/>
+    <item android:id="@+id/light"
+        android:icon="@drawable/light"
+        android:title="@string/lightSensor"/>
 </menu>

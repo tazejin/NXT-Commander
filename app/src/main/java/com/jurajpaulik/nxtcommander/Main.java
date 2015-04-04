@@ -78,12 +78,34 @@ public class Main extends Activity implements BTPripojenie{
     public int param5;
     public float currentMiliVolts;
     public String dotykovySenzor;
+    public boolean dotyk = false;
     public int currentSoundL;
     public String zvukovySenzor;
     public int currentLightL;
     public String svetelnySenzor;
     public int currentUltrasonicL;
     public String ultrazvukovySenzor;
+    public int okno = -1;
+    public boolean splnenyTouch = false;
+    public boolean splnenyZvuk = false;
+    public boolean splnenySvetlo = false;
+    public boolean splnenyPohyb1 = false;
+    public boolean splnenyPohyb2 = false;
+    public boolean splnenyPohyb3 = false;
+    public boolean splnenyPohyb4 = false;
+    public boolean splnenyPohyb5 = false;
+    public boolean splnenyWait1 = false;
+    public boolean splnenyWait2 = false;
+    public boolean splnenyWait3 = false;
+    public boolean splnenyWait4 = false;
+    public boolean splnenyWait5 = false;
+    public int metoda1 = -1;
+    public int metoda2 = -1;
+    public int metoda3 = -1;
+    public int metoda4 = -1;
+    public int metoda5 = -1;
+    public boolean zvukB = false;
+    public boolean svetloB = false;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -112,6 +134,7 @@ public class Main extends Activity implements BTPripojenie{
             // a nadstavime content view na ovladanie
             case R.id.controls:
                 setContentView(R.layout.ovladanie);
+                zistenieOkna();
                 nastavenieListenerov();
                 napravaSeekBaru();
                 switchMonitor();
@@ -119,8 +142,10 @@ public class Main extends Activity implements BTPripojenie{
             // po kliknuti na programovanie zmizne z menu, objavi sa ovladanie, updatneme menu
             // a nadstavime content view na programovanie
             case R.id.programming:
-                if (mojSwitch.isChecked())
-                mojSwitch.setChecked(false);
+                zistenieOkna();
+                if(okno == 1){
+                    mojSwitch.setChecked(false);
+                }
                 setContentView(R.layout.programovanie);
                 return true;
             // po kliknuti na spustenie programu vypiseme hlasku ak nenajdeme subory
@@ -169,6 +194,7 @@ public class Main extends Activity implements BTPripojenie{
         thisActivity = this;
         // nadstavenie na nase hlavne okno / ovladanie
         setContentView(R.layout.ovladanie);
+        zistenieOkna();
         super.onStart();
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 
@@ -216,6 +242,14 @@ public class Main extends Activity implements BTPripojenie{
         });
     }
 
+    public void zistenieOkna(){
+        if(this.getWindow().getDecorView() == findViewById(R.id.controls)){
+            okno = 1;
+        } else if(this.getWindow().getDecorView() == findViewById(R.id.programming)){
+            okno = 2;
+        }
+    }
+
     public void nastavenieListenerov(){
         // nadstavenie hodnot pre plynule ovladanie, podla parametrov sa generuju data posielane
         // do nxt kocky, ktora podla toho otaca motor
@@ -259,15 +293,6 @@ public class Main extends Activity implements BTPripojenie{
                     textSoundSenzor.setVisibility(View.VISIBLE);
                     textBatterySenzor.setVisibility(View.VISIBLE);
                     //textUltraSenzor.setVisibility(View.VISIBLE);
-                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
-                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
-                    //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_ULTRA, 0, 0);
-                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_TOUCH, 0, 0);
-                    dHandler.postDelayed(dRunnable, 100);
-                    bHandler.postDelayed(bRunnable, 100);
-                    sHandler.postDelayed(sRunnable, 100);
-                    zHandler.postDelayed(zRunnable, 100);
-                    //uHandler.postDelayed(uRunnable, 100);
                 }else{
                     textBattery.setVisibility(View.INVISIBLE);
                     textSound.setVisibility(View.INVISIBLE);
@@ -279,11 +304,6 @@ public class Main extends Activity implements BTPripojenie{
                     textSoundSenzor.setVisibility(View.INVISIBLE);
                     textBatterySenzor.setVisibility(View.INVISIBLE);
                     //textUltraSenzor.setVisibility(View.INVISIBLE);
-                    dHandler.removeCallbacks(dRunnable);
-                    bHandler.removeCallbacks(bRunnable);
-                    sHandler.removeCallbacks(sRunnable);
-                    zHandler.removeCallbacks(zRunnable);
-                    //uHandler.removeCallbacks(uRunnable);
                     sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
                 }
             }
@@ -525,7 +545,14 @@ public class Main extends Activity implements BTPripojenie{
                     connectingProgressDialog.dismiss();
                     //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_FIRMWARE_VERSION, 0, 0);
                     // nasledne prehladame robota a vsetky subory v nom
-                    //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES, 0, 0);
+                    //sendBTCmessage(1, BTKomunikacia.FIND_FILES, 0, 0);
+                    sendBTCmessage(2, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
+                    sendBTCmessage(2, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
+                    sendBTCmessage(2, BTKomunikacia.SET_TOUCH, 0, 0);
+                    dHandler.postDelayed(dRunnable, 100);
+                    sHandler.postDelayed(sRunnable, 100);
+                    zHandler.postDelayed(zRunnable, 100);
+                    bHandler.postDelayed(bRunnable, 100);
                     break;
                 // po prijati spravy o stave motora ak sme pripojeny k nxt tak vratime spravu
                 // o pozicii motora
@@ -586,6 +613,9 @@ public class Main extends Activity implements BTPripojenie{
                     byte[] deviceMessage = myBTKomunikacia.getReturnMessage();
                     break;
                 // najdene suborov
+
+
+
                 case BTKomunikacia.FIND_FILES:
                     // ak sme pripojeny
                     if (myBTKomunikacia != null) {
@@ -631,8 +661,10 @@ public class Main extends Activity implements BTPripojenie{
 
                         if(touchData == String.valueOf(nestlaceny)){
                             dotykovySenzor = getResources().getString(R.string.touch0);
-                                } else if (touchData == String.valueOf(stlaceny)){
-                                    dotykovySenzor = getResources().getString(R.string.touch1);
+                            dotyk = false;
+                        } else if (touchData == String.valueOf(stlaceny)){
+                            dotykovySenzor = getResources().getString(R.string.touch1);
+                            dotyk = true;
                             }
                         }
                     }
@@ -686,14 +718,14 @@ public class Main extends Activity implements BTPripojenie{
 
                             currentUltrasonicL = fromBytes(cbyte);
 
-                            Log.e("UltrasensorType: ", UltraType);
-                            Log.e("UltrasensorMode: ", UltraMode);
+                            //Log.e("UltrasensorType: ", UltraType);
+                            //Log.e("UltrasensorMode: ", UltraMode);
                             //Log.e("Status: ", status);
 
                             String udaje = raw1+" "+raw2+" "+norm1+" "+norm2+" "+
                                     scale1+" "+scale2+" "+cali1+" "+cali2;
-                            Log.e("Udaje: ", String.valueOf(currentUltrasonicL));
-                            Log.e("Udaje2: ", udaje);
+                            //Log.e("Udaje: ", String.valueOf(currentUltrasonicL));
+                            //Log.e("Udaje2: ", udaje);
                         }
                     }
                     break;
@@ -892,6 +924,18 @@ public class Main extends Activity implements BTPripojenie{
                     field1.setImageResource(R.drawable.wait);
                     field1.setContentDescription("5");
                     break;
+                case R.id.touchPressed:
+                    field1.setImageResource(R.drawable.touch_pressed);
+                    field1.setContentDescription("6");
+                    break;
+                case R.id.sound:
+                    field1.setImageResource(R.drawable.sound);
+                    field1.setContentDescription("7");
+                    break;
+                case R.id.light:
+                    field1.setImageResource(R.drawable.light);
+                    field1.setContentDescription("8");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -917,6 +961,18 @@ public class Main extends Activity implements BTPripojenie{
                 case R.id.wait:
                     field2.setImageResource(R.drawable.wait);
                     field2.setContentDescription("5");
+                    break;
+                case R.id.touchPressed:
+                    field2.setImageResource(R.drawable.touch_pressed);
+                    field2.setContentDescription("6");
+                    break;
+                case R.id.sound:
+                    field2.setImageResource(R.drawable.sound);
+                    field2.setContentDescription("7");
+                    break;
+                case R.id.light:
+                    field2.setImageResource(R.drawable.light);
+                    field2.setContentDescription("8");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -944,6 +1000,18 @@ public class Main extends Activity implements BTPripojenie{
                     field3.setImageResource(R.drawable.wait);
                     field3.setContentDescription("5");
                     break;
+                case R.id.touchPressed:
+                    field3.setImageResource(R.drawable.touch_pressed);
+                    field3.setContentDescription("6");
+                    break;
+                case R.id.sound:
+                    field3.setImageResource(R.drawable.sound);
+                    field3.setContentDescription("7");
+                    break;
+                case R.id.light:
+                    field3.setImageResource(R.drawable.light);
+                    field3.setContentDescription("8");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -969,6 +1037,18 @@ public class Main extends Activity implements BTPripojenie{
                 case R.id.wait:
                     field4.setImageResource(R.drawable.wait);
                     field4.setContentDescription("5");
+                    break;
+                case R.id.touchPressed:
+                    field4.setImageResource(R.drawable.touch_pressed);
+                    field4.setContentDescription("6");
+                    break;
+                case R.id.sound:
+                    field4.setImageResource(R.drawable.sound);
+                    field4.setContentDescription("7");
+                    break;
+                case R.id.light:
+                    field4.setImageResource(R.drawable.light);
+                    field4.setContentDescription("8");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -996,6 +1076,18 @@ public class Main extends Activity implements BTPripojenie{
                     field5.setImageResource(R.drawable.wait);
                     field5.setContentDescription("5");
                     break;
+                case R.id.touchPressed:
+                    field5.setImageResource(R.drawable.touch_pressed);
+                    field5.setContentDescription("6");
+                    break;
+                case R.id.sound:
+                    field5.setImageResource(R.drawable.sound);
+                    field5.setContentDescription("7");
+                    break;
+                case R.id.light:
+                    field5.setImageResource(R.drawable.light);
+                    field5.setContentDescription("8");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -1012,14 +1104,33 @@ public class Main extends Activity implements BTPripojenie{
         param1 = Integer.parseInt(String.valueOf(parameter1.getText()));
         if(field1.getContentDescription() == "1"){
             turnLeft(param1);
+            splnenyPohyb1 = true;
+            metoda1 = 4;
         } else if (field1.getContentDescription() == "2"){
             turnRight(param1);
+            splnenyPohyb1 = true;
+            metoda1 = 4;
         } else if (field1.getContentDescription() == "3"){
             goForward(param1);
+            splnenyPohyb1 = true;
+            metoda1 = 4;
         } else if (field1.getContentDescription() == "4"){
             goBackward(param1);
+            splnenyPohyb1 = true;
+            metoda1 = 4;
         } else if (field1.getContentDescription() == "5"){
             waitProgram(param1);
+            splnenyWait1 = true;
+            metoda1 = 5;
+        } else if (field1.getContentDescription() == "6"){
+            touchMetoda(param1);
+            metoda1 = 1;
+        } else if (field1.getContentDescription() == "7"){
+            soundMetoda(param1);
+            metoda1 = 2;
+        } else if (field1.getContentDescription() == "8"){
+            lightMetoda(param1);
+            metoda1 = 3;
         }
     }
 
@@ -1032,14 +1143,33 @@ public class Main extends Activity implements BTPripojenie{
         param2 = Integer.parseInt(String.valueOf(parameter2.getText()));
         if(field2.getContentDescription() == "1"){
             turnLeft(param2);
+            splnenyPohyb2 = true;
+            metoda2 = 4;
         } else if (field2.getContentDescription() == "2"){
             turnRight(param2);
+            splnenyPohyb2 = true;
+            metoda2 = 4;
         } else if (field2.getContentDescription() == "3"){
             goForward(param2);
+            splnenyPohyb2 = true;
+            metoda2 = 4;
         } else if (field2.getContentDescription() == "4"){
             goBackward(param2);
+            splnenyPohyb2 = true;
+            metoda2 = 4;
         } else if (field2.getContentDescription() == "5"){
             waitProgram(param2);
+            splnenyWait2 = true;
+            metoda2 = 5;
+        } else if (field2.getContentDescription() == "6"){
+            touchMetoda(param2);
+            metoda2 = 1;
+        } else if (field2.getContentDescription() == "7"){
+            soundMetoda(param2);
+            metoda2 = 2;
+        } else if (field2.getContentDescription() == "8"){
+            lightMetoda(param2);
+            metoda2 = 3;
         }
     }
 
@@ -1052,14 +1182,33 @@ public class Main extends Activity implements BTPripojenie{
         param3 = Integer.parseInt(String.valueOf(parameter3.getText()));
         if(field3.getContentDescription() == "1"){
             turnLeft(param3);
+            splnenyPohyb3 = true;
+            metoda3 = 4;
         } else if (field3.getContentDescription() == "2"){
             turnRight(param3);
+            splnenyPohyb3 = true;
+            metoda3 = 4;
         } else if (field3.getContentDescription() == "3"){
             goForward(param3);
+            splnenyPohyb3 = true;
+            metoda3 = 4;
         } else if (field3.getContentDescription() == "4"){
             goBackward(param3);
+            splnenyPohyb3 = true;
+            metoda3 = 4;
         } else if (field3.getContentDescription() == "5"){
             waitProgram(param3);
+            splnenyWait3 = true;
+            metoda3 = 5;
+        } else if (field3.getContentDescription() == "6"){
+            touchMetoda(param3);
+            metoda3 = 1;
+        } else if (field3.getContentDescription() == "7"){
+            soundMetoda(param3);
+            metoda3 = 2;
+        } else if (field3.getContentDescription() == "8"){
+            lightMetoda(param3);
+            metoda3 = 3;
         }
     }
 
@@ -1072,14 +1221,33 @@ public class Main extends Activity implements BTPripojenie{
         param4 = Integer.parseInt(String.valueOf(parameter4.getText()));
         if(field4.getContentDescription() == "1"){
             turnLeft(param4);
+            splnenyPohyb4 = true;
+            metoda4 = 4;
         } else if (field4.getContentDescription() == "2"){
             turnRight(param4);
+            splnenyPohyb4 = true;
+            metoda4 = 4;
         } else if (field4.getContentDescription() == "3"){
             goForward(param4);
+            splnenyPohyb4 = true;
+            metoda4 = 4;
         } else if (field4.getContentDescription() == "4"){
             goBackward(param4);
+            splnenyPohyb4 = true;
+            metoda4 = 4;
         } else if (field4.getContentDescription() == "5"){
             waitProgram(param4);
+            splnenyWait4 = true;
+            metoda4 = 5;
+        } else if (field4.getContentDescription() == "6"){
+            touchMetoda(param4);
+            metoda4 = 1;
+        } else if (field4.getContentDescription() == "7"){
+            soundMetoda(param4);
+            metoda4 = 2;
+        } else if (field4.getContentDescription() == "8"){
+            lightMetoda(param4);
+            metoda4 = 3;
         }
     }
 
@@ -1092,14 +1260,33 @@ public class Main extends Activity implements BTPripojenie{
         param5 = Integer.parseInt(String.valueOf(parameter5.getText()));
         if(field5.getContentDescription() == "1"){
             turnLeft(param5);
+            splnenyPohyb5 = true;
+            metoda5 = 4;
         } else if (field5.getContentDescription() == "2"){
             turnRight(param5);
+            splnenyPohyb5 = true;
+            metoda5 = 4;
         } else if (field5.getContentDescription() == "3"){
             goForward(param5);
+            splnenyPohyb5 = true;
+            metoda5 = 4;
         } else if (field5.getContentDescription() == "4"){
             goBackward(param5);
+            splnenyPohyb5 = true;
+            metoda5 = 4;
         } else if (field5.getContentDescription() == "5"){
             waitProgram(param5);
+            splnenyWait5 = true;
+            metoda5 = 5;
+        } else if (field5.getContentDescription() == "6"){
+            touchMetoda(param5);
+            metoda5 = 1;
+        } else if (field5.getContentDescription() == "7"){
+            soundMetoda(param5);
+            metoda5 = 2;
+        } else if (field5.getContentDescription() == "8"){
+            lightMetoda(param5);
+            metoda5 = 3;
         }
     }
 
@@ -1172,31 +1359,79 @@ public class Main extends Activity implements BTPripojenie{
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.WAIT, (param * 1000), 0);
     }
 
+    public void touchMetoda(int param){
+                if (dotyk){
+                    splnenyTouch = true;
+                }else{
+                    splnenyTouch = false;
+                }
+    }
+
+    public void soundMetoda(int param){
+        if (currentSoundL >= param)
+            splnenyZvuk = true;
+        else
+            splnenyZvuk = false;
+    }
+
+    public void lightMetoda(int param){
+        if (currentLightL >= param)
+            splnenySvetlo = true;
+        else
+            splnenyZvuk = false;
+    }
+
     // a teda zacatie hlavnej metody, vykona sa prva metoda a potom sa spusti seria timerov,
     // ktore beru parametre z predoslych metod, na ktorych spustia timer a po skonceni spustia
     // dalsiu metodu, az kym neskoncime
     public void startProgramovanie(View view){
         fieldMethod1();
+        if(metoda1 == 1 && splnenyTouch || metoda1 == 2 && splnenyZvuk
+                || metoda1 == 3 && splnenySvetlo || metoda1 == 4 && splnenyPohyb1
+                || metoda1 == 5 && splnenyWait1)
         new CountDownTimer(param1 * 1001, 1){
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
+                splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
                 fieldMethod2();
+                if(metoda2 == 1 && splnenyTouch || metoda1 == 2 && splnenyZvuk
+                        || metoda2 == 3 && splnenySvetlo || metoda2 == 4 && splnenyPohyb2
+                        || metoda2 == 5 && splnenyWait2)
                 new CountDownTimer(param2 * 1001, 1){
                     public void onTick(long millisUntilFinished) {
                     }
                     public void onFinish() {
+                        splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
                         fieldMethod3();
+                        if(metoda3 == 1 && splnenyTouch || metoda3 == 2 && splnenyZvuk
+                                || metoda3 == 3 && splnenySvetlo || metoda3 == 4 && splnenyPohyb3
+                                || metoda3 == 5 && splnenyWait3)
                         new CountDownTimer(param3 * 1001, 1){
                             public void onTick(long millisUntilFinished) {
                             }
                             public void onFinish() {
+                                splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
                                 fieldMethod4();
+                                if(metoda4 == 1 && splnenyTouch || metoda4 == 2 && splnenyZvuk
+                                        || metoda4 == 3 && splnenySvetlo || metoda4 == 4 && splnenyPohyb4
+                                        || metoda4 == 5 && splnenyWait4)
                                 new CountDownTimer(param4 * 1001, 1){
                                     public void onTick(long millisUntilFinished) {
                                     }
                                     public void onFinish() {
+                                        splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
                                         fieldMethod5();
+                                        if(metoda5 == 1 && splnenyTouch || metoda5 == 2 && splnenyZvuk
+                                                || metoda5 == 3 && splnenySvetlo || metoda5 == 4 && splnenyPohyb5
+                                                || metoda5 == 5 && splnenyWait5)
+                                        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
+                                        metoda1 = 0; metoda2 = 0; metoda3 = 0; metoda4 = 0; metoda5 = 0;
+                                        splnenySvetlo = false; splnenyZvuk = false; splnenyTouch = false;
+                                        splnenyWait1 = false; splnenyWait2 = false; splnenyWait3 = false;
+                                        splnenyWait4 = false; splnenyWait5 = false; splnenyPohyb1 = false;
+                                        splnenyPohyb2 = false; splnenyPohyb3 = false; splnenyPohyb4 = false;
+                                        splnenyPohyb5 = false;
                                     }
                                 }.start();
                             }
@@ -1230,7 +1465,7 @@ public class Main extends Activity implements BTPripojenie{
             TextView baterka = (TextView) findViewById(R.id.batterySenzor);
             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_BATTERY_STATE, 0, 0);
             baterka.setText(String.valueOf((int)currentMiliVolts) + "%");
-            bHandler.postDelayed(this, 1000);
+            bHandler.postDelayed(this, 5000);
         }
     };
 
@@ -1265,4 +1500,62 @@ public class Main extends Activity implements BTPripojenie{
             uHandler.postDelayed(this, 200);
         }
     };*/
+
+    public void deleteAll(View view){
+        ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
+        ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
+        ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
+        ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
+        ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
+        EditText ff1 = (EditText) findViewById(R.id.par1);
+        EditText ff2 = (EditText) findViewById(R.id.par2);
+        EditText ff3 = (EditText) findViewById(R.id.par3);
+        EditText ff4 = (EditText) findViewById(R.id.par4);
+        EditText ff5 = (EditText) findViewById(R.id.par5);
+
+
+        field1.setContentDescription("0");
+        field2.setContentDescription("0");
+        field3.setContentDescription("0");
+        field4.setContentDescription("0");
+        field5.setContentDescription("0");
+
+        field1.setImageResource(0);
+        field2.setImageResource(0);
+        field3.setImageResource(0);
+        field4.setImageResource(0);
+        field5.setImageResource(0);
+
+        ff1.setText("1");
+        ff2.setText("1");
+        ff3.setText("1");
+        ff4.setText("1");
+        ff5.setText("1");
+    }
+
+    public void zmenaSoundu(View view){
+        TextView zvukText = (TextView) findViewById(R.id.textSound);
+        if(!zvukB){
+            zvukB = true;
+            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
+            zvukText.setText(getResources().getString(R.string.soundLevel1));
+        } else{
+            zvukB = false;
+            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_SOUND, BTKomunikacia.DBA, 0);
+            zvukText.setText(getResources().getString(R.string.soundLevel2));
+        }
+    }
+
+    public void zmenaSvetla(View view){
+        TextView svetloText = (TextView) findViewById(R.id.textLight);
+        if(!svetloB){
+            svetloB = true;
+            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_ACTIVE, 0);
+            svetloText.setText(getResources().getString(R.string.lightLevel1));
+        } else{
+            svetloB = false;
+            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
+            svetloText.setText(getResources().getString(R.string.lightLevel2));
+        }
+    }
 }

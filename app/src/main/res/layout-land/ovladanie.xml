@@ -104,11 +104,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/soundLevel"
+        android:text="@string/soundLevel1"
         android:id="@+id/textSound"
         android:layout_below="@+id/textBattery"
         android:layout_alignLeft="@+id/switchMonitoring"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:clickable="true"
+        android:onClick="zmenaSoundu" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -124,12 +126,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/lightLevel"
+        android:text="@string/lightLevel2"
         android:id="@+id/textLight"
         android:visibility="invisible"
         android:layout_below="@+id/textTouch"
         android:layout_alignLeft="@+id/textTouch"
-        android:layout_alignStart="@+id/textTouch" />
+        android:layout_alignStart="@+id/textTouch"
+        android:onClick="zmenaSvetla"
+        android:clickable="true" />
 
     <TextView
         android:layout_width="wrap_content"

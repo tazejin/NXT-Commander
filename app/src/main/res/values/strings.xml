@@ -10,17 +10,23 @@
     <string name="ovladanie">Controlling</string>
     <string name="speed">Speed:</string>
     <string name="startProg">Start</string>
+    <string name="deleteAll">Delete fields</string>
     <string name="forward">Forward</string>
     <string name="backward">Backward</string>
     <string name="turnLeft">Turn Left</string>
     <string name="turnRight">Turn Right</string>
     <string name="wait">Wait</string>
+    <string name="touchSensor">Touch:Pressed</string>
+    <string name="soundSensor">Sound</string>
+    <string name="lightSensor">Light</string>
     <string name="monitoring">Monitoring</string>
 
     <!-- Stringy pre senzory -->
     <string name="batteryLevel">Battery Level:</string>
-    <string name="lightLevel">Light Level:</string>
-    <string name="soundLevel">Sound Level:</string>
+    <string name="lightLevel1">Light:Reflection:</string>
+    <string name="soundLevel1">Sound:dB:</string>
+    <string name="lightLevel2">Light:Ambient:</string>
+    <string name="soundLevel2">Sound:dBA:</string>
     <string name="touchLevel">Touch State:</string>
     <string name="ultraLevel">Distance:</string>
     <string name="touch0"> Not Pressed</string>

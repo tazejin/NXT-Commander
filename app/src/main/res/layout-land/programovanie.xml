@@ -66,17 +66,17 @@
         android:layout_toEndOf="@+id/Field4" />
 
     <Button
-        android:layout_width="80dp"
-        android:layout_height="40dp"
+        android:layout_width="150dp"
+        android:layout_height="75dp"
         android:text="@string/startProg"
         android:id="@+id/buttonStart"
         android:clickable="true"
         android:gravity="center"
         android:onClick="startProgramovanie"
+        android:layout_marginTop="122dp"
         android:layout_below="@+id/par5"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="42dp" />
+        android:layout_alignParentEnd="true" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -178,5 +178,125 @@
         android:layout_alignEnd="@+id/Field5"
         android:layout_toRightOf="@+id/Field4"
         android:layout_toEndOf="@+id/Field4" />
+
+    <Button
+        android:layout_width="150dp"
+        android:layout_height="75dp"
+        android:text="@string/deleteAll"
+        android:id="@+id/buttonDelete"
+        android:clickable="true"
+        android:gravity="center"
+        android:onClick="deleteAll"
+        android:layout_below="@+id/par5"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/batteryLevel"
+        android:id="@+id/textBattery"
+        android:layout_centerVertical="true"
+        android:layout_alignLeft="@+id/switchMonitoring"
+        android:layout_alignStart="@+id/switchMonitoring"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/soundLevel1"
+        android:id="@+id/textSound"
+        android:layout_below="@+id/textBattery"
+        android:layout_alignLeft="@+id/switchMonitoring"
+        android:visibility="gone"
+        android:clickable="true"
+        android:onClick="zmenaSoundu" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/touchLevel"
+        android:id="@+id/textTouch"
+        android:layout_below="@+id/textSound"
+        android:layout_alignLeft="@+id/switchMonitoring"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/lightLevel2"
+        android:id="@+id/textLight"
+        android:visibility="gone"
+        android:layout_below="@+id/textTouch"
+        android:layout_alignLeft="@+id/textTouch"
+        android:layout_alignStart="@+id/textTouch"
+        android:onClick="zmenaSvetla"
+        android:clickable="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/lightSenzor"
+        android:layout_alignTop="@+id/textLight"
+        android:layout_toRightOf="@+id/textBattery"
+        android:layout_marginLeft="100dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/batterySenzor"
+        android:layout_alignTop="@+id/textBattery"
+        android:layout_alignLeft="@+id/lightSenzor"
+        android:layout_alignStart="@+id/lightSenzor"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/soundSenzor"
+        android:layout_below="@+id/batterySenzor"
+        android:layout_alignLeft="@+id/batterySenzor"
+        android:layout_alignStart="@+id/batterySenzor"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/touchSenzor"
+        android:layout_below="@+id/soundSenzor"
+        android:layout_alignLeft="@+id/soundSenzor"
+        android:layout_alignStart="@+id/soundSenzor"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/ultraLevel"
+        android:id="@+id/textUltra"
+        android:visibility="gone"
+        android:layout_alignBottom="@+id/buttonDown"
+        android:layout_alignLeft="@+id/textLight"
+        android:layout_alignStart="@+id/textLight"
+        android:layout_marginBottom="30dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/ultraSenzor"
+        android:visibility="gone"
+        android:layout_alignTop="@+id/textUltra"
+        android:layout_alignLeft="@+id/lightSenzor"
+        android:layout_alignStart="@+id/lightSenzor" />
 
 </RelativeLayout>
