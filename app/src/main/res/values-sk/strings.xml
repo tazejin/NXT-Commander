@@ -58,4 +58,30 @@
     <string name="lightLevel2">Svetlo:Prostredie:</string>
     <string name="soundLevel1">Úroveň hluku:dB:</string>
     <string name="soundLevel2">Úroveň hluku:dBA:</string>
+    <string name="backward1">Vzad 1s</string>
+    <string name="backward10">Vzad 10s</string>
+    <string name="backward3">Vzad 3s</string>
+    <string name="backward5">Vzad 5s</string>
+    <string name="forward1">Vpred 1s</string>
+    <string name="forward10">Vpred 10s</string>
+    <string name="forward3">Vpred 3s</string>
+    <string name="forward5">Vpred 5s</string>
+    <string name="lightSensorM25">Svetlo &lt;= 25</string>
+    <string name="lightSensorM50">Svetlo &lt;= 50</string>
+    <string name="lightSensorM75">Svetlo &lt;= 75</string>
+    <string name="lightSensorV25">Svetlo &gt;= 25</string>
+    <string name="lightSensorV50">Svetlo &gt;= 50</string>
+    <string name="lightSensorV75">Svetlo &gt;= 75</string>
+    <string name="soundSensorM25">Zvuk &lt;= 25</string>
+    <string name="soundSensorM50">Zvuk &lt;= 50</string>
+    <string name="soundSensorM75">Zvuk &lt;= 75</string>
+    <string name="soundSensorV25">Zvuk &gt;= 25</string>
+    <string name="soundSensorV50">Zvuk &gt;= 50</string>
+    <string name="soundSensorV75">Zvuk &gt;= 75</string>
+    <string name="wait1">Čakaj 1s</string>
+    <string name="wait10">Čakaj 10s</string>
+    <string name="wait3">Čakaj 3s</string>
+    <string name="wait5">Čakaj 5s</string>
+    <string name="touchIncomplete">Dotykový senzor nebol zatlačený</string>
+    <string name="soundIncomplete">Vypršal čas: Podmienka nesplnená</string>
 </resources>

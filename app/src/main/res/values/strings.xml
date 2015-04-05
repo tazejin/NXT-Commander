@@ -11,15 +11,36 @@
     <string name="speed">Speed:</string>
     <string name="startProg">Start</string>
     <string name="deleteAll">Delete fields</string>
-    <string name="forward">Forward</string>
-    <string name="backward">Backward</string>
+    <string name="forward1">Forward 1s</string>
+    <string name="forward3">Forward 3s</string>
+    <string name="forward5">Forward 5s</string>
+    <string name="forward10">Forward 10s</string>
+    <string name="backward1">Backward 1s</string>
+    <string name="backward3">Backward 3s</string>
+    <string name="backward5">Backward 5s</string>
+    <string name="backward10">Backward 10s</string>
     <string name="turnLeft">Turn Left</string>
     <string name="turnRight">Turn Right</string>
-    <string name="wait">Wait</string>
+    <string name="wait1">Wait 1s</string>
+    <string name="wait3">Wait 3s</string>
+    <string name="wait5">Wait 5s</string>
+    <string name="wait10">Wait 10s</string>
     <string name="touchSensor">Touch:Pressed</string>
-    <string name="soundSensor">Sound</string>
-    <string name="lightSensor">Light</string>
+    <string name="soundSensorM25">Sound &lt;= 25</string>
+    <string name="soundSensorM50">Sound &lt;= 50</string>
+    <string name="soundSensorM75">Sound &lt;= 75</string>
+    <string name="soundSensorV25">Sound &gt;= 25</string>
+    <string name="soundSensorV50">Sound &gt;= 50</string>
+    <string name="soundSensorV75">Sound &gt;= 75</string>
+    <string name="lightSensorM25">Light &lt;= 25</string>
+    <string name="lightSensorM50">Light &lt;= 50</string>
+    <string name="lightSensorM75">Light &lt;= 75</string>
+    <string name="lightSensorV25">Light &gt;= 25</string>
+    <string name="lightSensorV50">Light &gt;= 50</string>
+    <string name="lightSensorV75">Light &gt;= 75</string>
     <string name="monitoring">Monitoring</string>
+    <string name="touchIncomplete">Touch sensor was not pressed</string>
+    <string name="reqIncomplete">Timeout: Requirement not met</string>
 
     <!-- Stringy pre senzory -->
     <string name="batteryLevel">Battery Level:</string>

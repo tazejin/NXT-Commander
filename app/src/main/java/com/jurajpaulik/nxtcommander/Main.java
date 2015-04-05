@@ -17,23 +17,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class Main extends Activity implements BTPripojenie{
@@ -66,16 +62,9 @@ public class Main extends Activity implements BTPripojenie{
     public boolean command3;
     public boolean command4;
     public boolean command5;
+    public boolean command6;
+    public boolean command7;
     public int buttonID;
-    public double leftMotor;
-    public double rightMotor;
-    public double allMotor;
-    public int param;
-    public int param1;
-    public int param2;
-    public int param3;
-    public int param4;
-    public int param5;
     public float currentMiliVolts;
     public String dotykovySenzor;
     public boolean dotyk = false;
@@ -85,27 +74,23 @@ public class Main extends Activity implements BTPripojenie{
     public String svetelnySenzor;
     public int currentUltrasonicL;
     public String ultrazvukovySenzor;
-    public int okno = -1;
-    public boolean splnenyTouch = false;
-    public boolean splnenyZvuk = false;
-    public boolean splnenySvetlo = false;
-    public boolean splnenyPohyb1 = false;
-    public boolean splnenyPohyb2 = false;
-    public boolean splnenyPohyb3 = false;
-    public boolean splnenyPohyb4 = false;
-    public boolean splnenyPohyb5 = false;
-    public boolean splnenyWait1 = false;
-    public boolean splnenyWait2 = false;
-    public boolean splnenyWait3 = false;
-    public boolean splnenyWait4 = false;
-    public boolean splnenyWait5 = false;
-    public int metoda1 = -1;
-    public int metoda2 = -1;
-    public int metoda3 = -1;
-    public int metoda4 = -1;
-    public int metoda5 = -1;
-    public boolean zvukB = false;
     public boolean svetloB = false;
+    public boolean zvukB = false;
+    public boolean splnenyDotyk = false;
+    public boolean splnenyZvuk = false;
+    public boolean splneneSvetlo = false;
+    public boolean splnenyPohyb = false;
+    public boolean splneneCakanie = false;
+    public final long time1 = 500;
+    public final long time3 = 2000;
+    public final long time5 = 4000;
+    public final long time10 = 9000;
+    public long casovac1;
+    public long casovac2;
+    public long casovac3;
+    public long casovac4;
+    public long casovac5;
+    public long casovac6;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -117,7 +102,6 @@ public class Main extends Activity implements BTPripojenie{
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //return super.onOptionsItemSelected(item);
-        Switch mojSwitch = (Switch) findViewById(R.id.switchMonitoring);
         switch (item.getItemId()) {
             // po stlaceni connect/disconnect spravime metody, kt. su spiate s nazvom
             case R.id.connect:
@@ -134,7 +118,6 @@ public class Main extends Activity implements BTPripojenie{
             // a nadstavime content view na ovladanie
             case R.id.controls:
                 setContentView(R.layout.ovladanie);
-                zistenieOkna();
                 nastavenieListenerov();
                 napravaSeekBaru();
                 switchMonitor();
@@ -142,10 +125,6 @@ public class Main extends Activity implements BTPripojenie{
             // po kliknuti na programovanie zmizne z menu, objavi sa ovladanie, updatneme menu
             // a nadstavime content view na programovanie
             case R.id.programming:
-                zistenieOkna();
-                if(okno == 1){
-                    mojSwitch.setChecked(false);
-                }
                 setContentView(R.layout.programovanie);
                 return true;
             // po kliknuti na spustenie programu vypiseme hlasku ak nenajdeme subory
@@ -194,7 +173,6 @@ public class Main extends Activity implements BTPripojenie{
         thisActivity = this;
         // nadstavenie na nase hlavne okno / ovladanie
         setContentView(R.layout.ovladanie);
-        zistenieOkna();
         super.onStart();
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 
@@ -242,14 +220,6 @@ public class Main extends Activity implements BTPripojenie{
         });
     }
 
-    public void zistenieOkna(){
-        if(this.getWindow().getDecorView() == findViewById(R.id.controls)){
-            okno = 1;
-        } else if(this.getWindow().getDecorView() == findViewById(R.id.programming)){
-            okno = 2;
-        }
-    }
-
     public void nastavenieListenerov(){
         // nadstavenie hodnot pre plynule ovladanie, podla parametrov sa generuju data posielane
         // do nxt kocky, ktora podla toho otaca motor
@@ -283,7 +253,7 @@ public class Main extends Activity implements BTPripojenie{
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (compoundButton.isChecked()){
-                    textBattery.setVisibility(View.VISIBLE);
+                    //textBattery.setVisibility(View.VISIBLE);
                     textSound.setVisibility(View.VISIBLE);
                     textTouch.setVisibility(View.VISIBLE);
                     textLight.setVisibility(View.VISIBLE);
@@ -291,10 +261,10 @@ public class Main extends Activity implements BTPripojenie{
                     textLightSenzor.setVisibility(View.VISIBLE);
                     textTouchSenzor.setVisibility(View.VISIBLE);
                     textSoundSenzor.setVisibility(View.VISIBLE);
-                    textBatterySenzor.setVisibility(View.VISIBLE);
+                    //textBatterySenzor.setVisibility(View.VISIBLE);
                     //textUltraSenzor.setVisibility(View.VISIBLE);
                 }else{
-                    textBattery.setVisibility(View.INVISIBLE);
+                    //textBattery.setVisibility(View.INVISIBLE);
                     textSound.setVisibility(View.INVISIBLE);
                     textTouch.setVisibility(View.INVISIBLE);
                     textLight.setVisibility(View.INVISIBLE);
@@ -302,7 +272,7 @@ public class Main extends Activity implements BTPripojenie{
                     textLightSenzor.setVisibility(View.INVISIBLE);
                     textTouchSenzor.setVisibility(View.INVISIBLE);
                     textSoundSenzor.setVisibility(View.INVISIBLE);
-                    textBatterySenzor.setVisibility(View.INVISIBLE);
+                    //textBatterySenzor.setVisibility(View.INVISIBLE);
                     //textUltraSenzor.setVisibility(View.INVISIBLE);
                     sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
                 }
@@ -335,12 +305,10 @@ public class Main extends Activity implements BTPripojenie{
 
     // poslanie spravy na ukoncenie vlakna
     public void destroyBTCommunicator() {
-
         if (myBTKomunikacia != null) {
             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.CLOSE, 0, 0);
             myBTKomunikacia = null;
         }
-
         connected = false;
     }
 
@@ -466,7 +434,7 @@ public class Main extends Activity implements BTPripojenie{
         }
         catch (IndexOutOfBoundsException ex) {
             showToast(R.string.sensor_initialization_failure, Toast.LENGTH_LONG);
-            //destroyBTCommunicator();
+            destroyBTCommunicator();
             finish();
         }
     }
@@ -545,7 +513,7 @@ public class Main extends Activity implements BTPripojenie{
                     connectingProgressDialog.dismiss();
                     //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_FIRMWARE_VERSION, 0, 0);
                     // nasledne prehladame robota a vsetky subory v nom
-                    //sendBTCmessage(1, BTKomunikacia.FIND_FILES, 0, 0);
+                    sendBTCmessage(1, BTKomunikacia.FIND_FILES, 0, 0);
                     sendBTCmessage(2, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
                     sendBTCmessage(2, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
                     sendBTCmessage(2, BTKomunikacia.SET_TOUCH, 0, 0);
@@ -613,9 +581,6 @@ public class Main extends Activity implements BTPripojenie{
                     byte[] deviceMessage = myBTKomunikacia.getReturnMessage();
                     break;
                 // najdene suborov
-
-
-
                 case BTKomunikacia.FIND_FILES:
                     // ak sme pripojeny
                     if (myBTKomunikacia != null) {
@@ -659,10 +624,10 @@ public class Main extends Activity implements BTPripojenie{
                         if (touchMessage[3] == 0) {
                             String touchData = String.valueOf(touchMessage[8]);
 
-                        if(touchData == String.valueOf(nestlaceny)){
+                        if(touchData.equals(String.valueOf(nestlaceny))){
                             dotykovySenzor = getResources().getString(R.string.touch0);
                             dotyk = false;
-                        } else if (touchData == String.valueOf(stlaceny)){
+                        } else if (touchData.equals(String.valueOf(stlaceny))){
                             dotykovySenzor = getResources().getString(R.string.touch1);
                             dotyk = true;
                             }
@@ -850,6 +815,20 @@ public class Main extends Activity implements BTPripojenie{
         this.openContextMenu(field5);
     }
 
+    // zmenenie ikony pola v programovani aktivity a registrovanie do context menu
+    public void changeIcon6(View view){
+        ImageButton field6 = (ImageButton) findViewById(R.id.Field6);
+        registerForContextMenu(field6);
+        this.openContextMenu(field6);
+    }
+
+    // zmenenie ikony pola v programovani aktivity a registrovanie do context menu
+    public void changeIcon7(View view){
+        ImageButton field7 = (ImageButton) findViewById(R.id.Field7);
+        registerForContextMenu(field7);
+        this.openContextMenu(field7);
+    }
+
     // po vytvoreni context menu
     @Override
     public void onCreateContextMenu(ContextMenu cMenu, View view, ContextMenu.ContextMenuInfo cMenuInfo) {
@@ -889,6 +868,22 @@ public class Main extends Activity implements BTPripojenie{
             command3 = false;
             command4 = false;
             command5 = true;
+        } else if (buttonID==R.id.Field6){
+            command1 = false;
+            command2 = false;
+            command3 = false;
+            command4 = false;
+            command5 = false;
+            command6 = true;
+            command7 = false;
+        } else if (buttonID==R.id.Field7){
+            command1 = false;
+            command2 = false;
+            command3 = false;
+            command4 = false;
+            command5 = false;
+            command6 = false;
+            command7 = true;
         }
     }
 
@@ -899,42 +894,120 @@ public class Main extends Activity implements BTPripojenie{
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
         ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
         ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
+        ImageButton field6 = (ImageButton) findViewById(R.id.Field6);
+        ImageButton field7 = (ImageButton) findViewById(R.id.Field7);
 
         // zistenie na kazdom buttone, na co sme klikli a podla toho nadstavime "ikonu"
         // a nadstavime flag v podobe cisla, kt. neskor pouzijeme na zistenie metody na vykonanie
         if(command1){
             switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field1.setImageResource(R.drawable.forward1);
+                    field1.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field1.setImageResource(R.drawable.forward3);
+                    field1.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field1.setImageResource(R.drawable.forward5);
+                    field1.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field1.setImageResource(R.drawable.forward10);
+                    field1.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field1.setImageResource(R.drawable.backward1);
+                    field1.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field1.setImageResource(R.drawable.backward3);
+                    field1.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field1.setImageResource(R.drawable.backward5);
+                    field1.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field1.setImageResource(R.drawable.backward10);
+                    field1.setContentDescription("8");
+                    break;
                 case R.id.left:
                     field1.setImageResource(R.drawable.arrow_left);
-                    field1.setContentDescription("1");
+                    field1.setContentDescription("9");
                     break;
                 case R.id.right:
                     field1.setImageResource(R.drawable.arrow_right);
-                    field1.setContentDescription("2");
+                    field1.setContentDescription("10");
                     break;
-                case R.id.forward:
-                    field1.setImageResource(R.drawable.arrow_up);
-                    field1.setContentDescription("3");
+                case R.id.wait1:
+                    field1.setImageResource(R.drawable.wait1);
+                    field1.setContentDescription("11");
                     break;
-                case R.id.backward:
-                    field1.setImageResource(R.drawable.arrow_down);
-                    field1.setContentDescription("4");
+                case R.id.wait3:
+                    field1.setImageResource(R.drawable.wait3);
+                    field1.setContentDescription("12");
                     break;
-                case R.id.wait:
-                    field1.setImageResource(R.drawable.wait);
-                    field1.setContentDescription("5");
+                case R.id.wait5:
+                    field1.setImageResource(R.drawable.wait5);
+                    field1.setContentDescription("13");
                     break;
-                case R.id.touchPressed:
+                case R.id.wait10:
+                    field1.setImageResource(R.drawable.wait10);
+                    field1.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
                     field1.setImageResource(R.drawable.touch_pressed);
-                    field1.setContentDescription("6");
+                    field1.setContentDescription("15");
                     break;
-                case R.id.sound:
-                    field1.setImageResource(R.drawable.sound);
-                    field1.setContentDescription("7");
+                case R.id.soundSensorM25:
+                    field1.setImageResource(R.drawable.sound_lt_25);
+                    field1.setContentDescription("16");
                     break;
-                case R.id.light:
-                    field1.setImageResource(R.drawable.light);
-                    field1.setContentDescription("8");
+                case R.id.soundSensorM50:
+                    field1.setImageResource(R.drawable.sound_lt_50);
+                    field1.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field1.setImageResource(R.drawable.sound_lt_75);
+                    field1.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field1.setImageResource(R.drawable.sound_gt_25);
+                    field1.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field1.setImageResource(R.drawable.sound_gt_50);
+                    field1.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field1.setImageResource(R.drawable.sound_gt_75);
+                    field1.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field1.setImageResource(R.drawable.light_lt_25);
+                    field1.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field1.setImageResource(R.drawable.light_lt_50);
+                    field1.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field1.setImageResource(R.drawable.light_lt_75);
+                    field1.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field1.setImageResource(R.drawable.light_gt_25);
+                    field1.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field1.setImageResource(R.drawable.light_gt_50);
+                    field1.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field1.setImageResource(R.drawable.light_gt_75);
+                    field1.setContentDescription("27");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -942,37 +1015,113 @@ public class Main extends Activity implements BTPripojenie{
         }
         else if(command2){
             switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field2.setImageResource(R.drawable.forward1);
+                    field2.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field2.setImageResource(R.drawable.forward3);
+                    field2.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field2.setImageResource(R.drawable.forward5);
+                    field2.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field2.setImageResource(R.drawable.forward10);
+                    field2.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field2.setImageResource(R.drawable.backward1);
+                    field2.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field2.setImageResource(R.drawable.backward3);
+                    field2.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field2.setImageResource(R.drawable.backward5);
+                    field2.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field2.setImageResource(R.drawable.backward10);
+                    field2.setContentDescription("8");
+                    break;
                 case R.id.left:
                     field2.setImageResource(R.drawable.arrow_left);
-                    field2.setContentDescription("1");
+                    field2.setContentDescription("9");
                     break;
                 case R.id.right:
                     field2.setImageResource(R.drawable.arrow_right);
-                    field2.setContentDescription("2");
+                    field2.setContentDescription("10");
                     break;
-                case R.id.forward:
-                    field2.setImageResource(R.drawable.arrow_up);
-                    field2.setContentDescription("3");
+                case R.id.wait1:
+                    field2.setImageResource(R.drawable.wait1);
+                    field2.setContentDescription("11");
                     break;
-                case R.id.backward:
-                    field2.setImageResource(R.drawable.arrow_down);
-                    field2.setContentDescription("4");
+                case R.id.wait3:
+                    field2.setImageResource(R.drawable.wait3);
+                    field2.setContentDescription("12");
                     break;
-                case R.id.wait:
-                    field2.setImageResource(R.drawable.wait);
-                    field2.setContentDescription("5");
+                case R.id.wait5:
+                    field2.setImageResource(R.drawable.wait5);
+                    field2.setContentDescription("13");
                     break;
-                case R.id.touchPressed:
+                case R.id.wait10:
+                    field2.setImageResource(R.drawable.wait10);
+                    field2.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
                     field2.setImageResource(R.drawable.touch_pressed);
-                    field2.setContentDescription("6");
+                    field2.setContentDescription("15");
                     break;
-                case R.id.sound:
-                    field2.setImageResource(R.drawable.sound);
-                    field2.setContentDescription("7");
+                case R.id.soundSensorM25:
+                    field2.setImageResource(R.drawable.sound_lt_25);
+                    field2.setContentDescription("16");
                     break;
-                case R.id.light:
-                    field2.setImageResource(R.drawable.light);
-                    field2.setContentDescription("8");
+                case R.id.soundSensorM50:
+                    field2.setImageResource(R.drawable.sound_lt_50);
+                    field2.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field2.setImageResource(R.drawable.sound_lt_75);
+                    field2.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field2.setImageResource(R.drawable.sound_gt_25);
+                    field2.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field2.setImageResource(R.drawable.sound_gt_50);
+                    field2.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field2.setImageResource(R.drawable.sound_gt_75);
+                    field2.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field2.setImageResource(R.drawable.light_lt_25);
+                    field2.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field2.setImageResource(R.drawable.light_lt_50);
+                    field2.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field2.setImageResource(R.drawable.light_lt_75);
+                    field2.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field2.setImageResource(R.drawable.light_gt_25);
+                    field2.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field2.setImageResource(R.drawable.light_gt_50);
+                    field2.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field2.setImageResource(R.drawable.light_gt_75);
+                    field2.setContentDescription("27");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -980,37 +1129,113 @@ public class Main extends Activity implements BTPripojenie{
         }
         else if(command3){
             switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field3.setImageResource(R.drawable.forward1);
+                    field3.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field3.setImageResource(R.drawable.forward3);
+                    field3.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field3.setImageResource(R.drawable.forward5);
+                    field3.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field3.setImageResource(R.drawable.forward10);
+                    field3.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field3.setImageResource(R.drawable.backward1);
+                    field3.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field3.setImageResource(R.drawable.backward3);
+                    field3.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field3.setImageResource(R.drawable.backward5);
+                    field3.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field3.setImageResource(R.drawable.backward10);
+                    field3.setContentDescription("8");
+                    break;
                 case R.id.left:
                     field3.setImageResource(R.drawable.arrow_left);
-                    field3.setContentDescription("1");
+                    field3.setContentDescription("9");
                     break;
                 case R.id.right:
                     field3.setImageResource(R.drawable.arrow_right);
-                    field3.setContentDescription("2");
+                    field3.setContentDescription("10");
                     break;
-                case R.id.forward:
-                    field3.setImageResource(R.drawable.arrow_up);
-                    field3.setContentDescription("3");
+                case R.id.wait1:
+                    field3.setImageResource(R.drawable.wait1);
+                    field3.setContentDescription("11");
                     break;
-                case R.id.backward:
-                    field3.setImageResource(R.drawable.arrow_down);
-                    field3.setContentDescription("4");
+                case R.id.wait3:
+                    field3.setImageResource(R.drawable.wait3);
+                    field3.setContentDescription("12");
                     break;
-                case R.id.wait:
-                    field3.setImageResource(R.drawable.wait);
-                    field3.setContentDescription("5");
+                case R.id.wait5:
+                    field3.setImageResource(R.drawable.wait5);
+                    field3.setContentDescription("13");
                     break;
-                case R.id.touchPressed:
+                case R.id.wait10:
+                    field3.setImageResource(R.drawable.wait10);
+                    field3.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
                     field3.setImageResource(R.drawable.touch_pressed);
-                    field3.setContentDescription("6");
+                    field3.setContentDescription("15");
                     break;
-                case R.id.sound:
-                    field3.setImageResource(R.drawable.sound);
-                    field3.setContentDescription("7");
+                case R.id.soundSensorM25:
+                    field3.setImageResource(R.drawable.sound_lt_25);
+                    field3.setContentDescription("16");
                     break;
-                case R.id.light:
-                    field3.setImageResource(R.drawable.light);
-                    field3.setContentDescription("8");
+                case R.id.soundSensorM50:
+                    field3.setImageResource(R.drawable.sound_lt_50);
+                    field3.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field3.setImageResource(R.drawable.sound_lt_75);
+                    field3.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field3.setImageResource(R.drawable.sound_gt_25);
+                    field3.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field3.setImageResource(R.drawable.sound_gt_50);
+                    field3.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field3.setImageResource(R.drawable.sound_gt_75);
+                    field3.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field3.setImageResource(R.drawable.light_lt_25);
+                    field3.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field3.setImageResource(R.drawable.light_lt_50);
+                    field3.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field3.setImageResource(R.drawable.light_lt_75);
+                    field3.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field3.setImageResource(R.drawable.light_gt_25);
+                    field3.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field3.setImageResource(R.drawable.light_gt_50);
+                    field3.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field3.setImageResource(R.drawable.light_gt_75);
+                    field3.setContentDescription("27");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -1018,37 +1243,113 @@ public class Main extends Activity implements BTPripojenie{
         }
         else if(command4){
             switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field4.setImageResource(R.drawable.forward1);
+                    field4.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field4.setImageResource(R.drawable.forward3);
+                    field4.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field4.setImageResource(R.drawable.forward5);
+                    field4.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field4.setImageResource(R.drawable.forward10);
+                    field4.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field4.setImageResource(R.drawable.backward1);
+                    field4.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field4.setImageResource(R.drawable.backward3);
+                    field4.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field4.setImageResource(R.drawable.backward5);
+                    field4.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field4.setImageResource(R.drawable.backward10);
+                    field4.setContentDescription("8");
+                    break;
                 case R.id.left:
                     field4.setImageResource(R.drawable.arrow_left);
-                    field4.setContentDescription("1");
+                    field4.setContentDescription("9");
                     break;
                 case R.id.right:
                     field4.setImageResource(R.drawable.arrow_right);
-                    field4.setContentDescription("2");
+                    field4.setContentDescription("10");
                     break;
-                case R.id.forward:
-                    field4.setImageResource(R.drawable.arrow_up);
-                    field4.setContentDescription("3");
+                case R.id.wait1:
+                    field4.setImageResource(R.drawable.wait1);
+                    field4.setContentDescription("11");
                     break;
-                case R.id.backward:
-                    field4.setImageResource(R.drawable.arrow_down);
-                    field4.setContentDescription("4");
+                case R.id.wait3:
+                    field4.setImageResource(R.drawable.wait3);
+                    field4.setContentDescription("12");
                     break;
-                case R.id.wait:
-                    field4.setImageResource(R.drawable.wait);
-                    field4.setContentDescription("5");
+                case R.id.wait5:
+                    field4.setImageResource(R.drawable.wait5);
+                    field4.setContentDescription("13");
                     break;
-                case R.id.touchPressed:
+                case R.id.wait10:
+                    field4.setImageResource(R.drawable.wait10);
+                    field4.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
                     field4.setImageResource(R.drawable.touch_pressed);
-                    field4.setContentDescription("6");
+                    field4.setContentDescription("15");
                     break;
-                case R.id.sound:
-                    field4.setImageResource(R.drawable.sound);
-                    field4.setContentDescription("7");
+                case R.id.soundSensorM25:
+                    field4.setImageResource(R.drawable.sound_lt_25);
+                    field4.setContentDescription("16");
                     break;
-                case R.id.light:
-                    field4.setImageResource(R.drawable.light);
-                    field4.setContentDescription("8");
+                case R.id.soundSensorM50:
+                    field4.setImageResource(R.drawable.sound_lt_50);
+                    field4.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field4.setImageResource(R.drawable.sound_lt_75);
+                    field4.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field4.setImageResource(R.drawable.sound_gt_25);
+                    field4.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field4.setImageResource(R.drawable.sound_gt_50);
+                    field4.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field4.setImageResource(R.drawable.sound_gt_75);
+                    field4.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field4.setImageResource(R.drawable.light_lt_25);
+                    field4.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field4.setImageResource(R.drawable.light_lt_50);
+                    field4.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field4.setImageResource(R.drawable.light_lt_75);
+                    field4.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field4.setImageResource(R.drawable.light_gt_25);
+                    field4.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field4.setImageResource(R.drawable.light_gt_50);
+                    field4.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field4.setImageResource(R.drawable.light_gt_75);
+                    field4.setContentDescription("27");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -1056,37 +1357,339 @@ public class Main extends Activity implements BTPripojenie{
         }
         else if(command5){
             switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field5.setImageResource(R.drawable.forward1);
+                    field5.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field5.setImageResource(R.drawable.forward3);
+                    field5.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field5.setImageResource(R.drawable.forward5);
+                    field5.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field5.setImageResource(R.drawable.forward10);
+                    field5.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field5.setImageResource(R.drawable.backward1);
+                    field5.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field5.setImageResource(R.drawable.backward3);
+                    field5.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field5.setImageResource(R.drawable.backward5);
+                    field5.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field5.setImageResource(R.drawable.backward10);
+                    field5.setContentDescription("8");
+                    break;
                 case R.id.left:
                     field5.setImageResource(R.drawable.arrow_left);
-                    field5.setContentDescription("1");
+                    field5.setContentDescription("9");
                     break;
                 case R.id.right:
                     field5.setImageResource(R.drawable.arrow_right);
-                    field5.setContentDescription("2");
+                    field5.setContentDescription("10");
                     break;
-                case R.id.forward:
-                    field5.setImageResource(R.drawable.arrow_up);
-                    field5.setContentDescription("3");
+                case R.id.wait1:
+                    field5.setImageResource(R.drawable.wait1);
+                    field5.setContentDescription("11");
                     break;
-                case R.id.backward:
-                    field5.setImageResource(R.drawable.arrow_down);
-                    field5.setContentDescription("4");
+                case R.id.wait3:
+                    field5.setImageResource(R.drawable.wait3);
+                    field5.setContentDescription("12");
                     break;
-                case R.id.wait:
-                    field5.setImageResource(R.drawable.wait);
-                    field5.setContentDescription("5");
+                case R.id.wait5:
+                    field5.setImageResource(R.drawable.wait5);
+                    field5.setContentDescription("13");
                     break;
-                case R.id.touchPressed:
+                case R.id.wait10:
+                    field5.setImageResource(R.drawable.wait10);
+                    field5.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
                     field5.setImageResource(R.drawable.touch_pressed);
-                    field5.setContentDescription("6");
+                    field5.setContentDescription("15");
                     break;
-                case R.id.sound:
-                    field5.setImageResource(R.drawable.sound);
-                    field5.setContentDescription("7");
+                case R.id.soundSensorM25:
+                    field5.setImageResource(R.drawable.sound_lt_25);
+                    field5.setContentDescription("16");
                     break;
-                case R.id.light:
-                    field5.setImageResource(R.drawable.light);
-                    field5.setContentDescription("8");
+                case R.id.soundSensorM50:
+                    field5.setImageResource(R.drawable.sound_lt_50);
+                    field5.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field5.setImageResource(R.drawable.sound_lt_75);
+                    field5.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field5.setImageResource(R.drawable.sound_gt_25);
+                    field5.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field5.setImageResource(R.drawable.sound_gt_50);
+                    field5.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field5.setImageResource(R.drawable.sound_gt_75);
+                    field5.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field5.setImageResource(R.drawable.light_lt_25);
+                    field5.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field5.setImageResource(R.drawable.light_lt_50);
+                    field5.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field5.setImageResource(R.drawable.light_lt_75);
+                    field5.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field5.setImageResource(R.drawable.light_gt_25);
+                    field5.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field5.setImageResource(R.drawable.light_gt_50);
+                    field5.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field5.setImageResource(R.drawable.light_gt_75);
+                    field5.setContentDescription("27");
+                    break;
+                default:
+                    return super.onContextItemSelected(cItem);
+            }
+        } else if(command6){
+            switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field6.setImageResource(R.drawable.forward1);
+                    field6.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field6.setImageResource(R.drawable.forward3);
+                    field6.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field6.setImageResource(R.drawable.forward5);
+                    field6.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field6.setImageResource(R.drawable.forward10);
+                    field6.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field6.setImageResource(R.drawable.backward1);
+                    field6.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field6.setImageResource(R.drawable.backward3);
+                    field6.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field6.setImageResource(R.drawable.backward5);
+                    field6.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field6.setImageResource(R.drawable.backward10);
+                    field6.setContentDescription("8");
+                    break;
+                case R.id.left:
+                    field6.setImageResource(R.drawable.arrow_left);
+                    field6.setContentDescription("9");
+                    break;
+                case R.id.right:
+                    field6.setImageResource(R.drawable.arrow_right);
+                    field6.setContentDescription("10");
+                    break;
+                case R.id.wait1:
+                    field6.setImageResource(R.drawable.wait1);
+                    field6.setContentDescription("11");
+                    break;
+                case R.id.wait3:
+                    field6.setImageResource(R.drawable.wait3);
+                    field6.setContentDescription("12");
+                    break;
+                case R.id.wait5:
+                    field6.setImageResource(R.drawable.wait5);
+                    field6.setContentDescription("13");
+                    break;
+                case R.id.wait10:
+                    field6.setImageResource(R.drawable.wait10);
+                    field6.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
+                    field6.setImageResource(R.drawable.touch_pressed);
+                    field6.setContentDescription("15");
+                    break;
+                case R.id.soundSensorM25:
+                    field6.setImageResource(R.drawable.sound_lt_25);
+                    field6.setContentDescription("16");
+                    break;
+                case R.id.soundSensorM50:
+                    field6.setImageResource(R.drawable.sound_lt_50);
+                    field6.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field6.setImageResource(R.drawable.sound_lt_75);
+                    field6.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field6.setImageResource(R.drawable.sound_gt_25);
+                    field6.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field6.setImageResource(R.drawable.sound_gt_50);
+                    field6.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field6.setImageResource(R.drawable.sound_gt_75);
+                    field6.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field6.setImageResource(R.drawable.light_lt_25);
+                    field6.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field6.setImageResource(R.drawable.light_lt_50);
+                    field6.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field6.setImageResource(R.drawable.light_lt_75);
+                    field6.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field6.setImageResource(R.drawable.light_gt_25);
+                    field6.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field6.setImageResource(R.drawable.light_gt_50);
+                    field6.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field6.setImageResource(R.drawable.light_gt_75);
+                    field6.setContentDescription("27");
+                    break;
+                default:
+                    return super.onContextItemSelected(cItem);
+            }
+        } else if(command7){
+            switch (cItem.getItemId()) {
+                case R.id.forward1:
+                    field7.setImageResource(R.drawable.forward1);
+                    field7.setContentDescription("1");
+                    break;
+                case R.id.forward3:
+                    field7.setImageResource(R.drawable.forward3);
+                    field7.setContentDescription("2");
+                    break;
+                case R.id.forward5:
+                    field7.setImageResource(R.drawable.forward5);
+                    field7.setContentDescription("3");
+                    break;
+                case R.id.forward10:
+                    field7.setImageResource(R.drawable.forward10);
+                    field7.setContentDescription("4");
+                    break;
+                case R.id.backward1:
+                    field7.setImageResource(R.drawable.backward1);
+                    field7.setContentDescription("5");
+                    break;
+                case R.id.backward3:
+                    field7.setImageResource(R.drawable.backward3);
+                    field7.setContentDescription("6");
+                    break;
+                case R.id.backward5:
+                    field7.setImageResource(R.drawable.backward5);
+                    field7.setContentDescription("7");
+                    break;
+                case R.id.backward10:
+                    field7.setImageResource(R.drawable.backward10);
+                    field7.setContentDescription("8");
+                    break;
+                case R.id.left:
+                    field7.setImageResource(R.drawable.arrow_left);
+                    field7.setContentDescription("9");
+                    break;
+                case R.id.right:
+                    field7.setImageResource(R.drawable.arrow_right);
+                    field7.setContentDescription("10");
+                    break;
+                case R.id.wait1:
+                    field7.setImageResource(R.drawable.wait1);
+                    field7.setContentDescription("11");
+                    break;
+                case R.id.wait3:
+                    field7.setImageResource(R.drawable.wait3);
+                    field7.setContentDescription("12");
+                    break;
+                case R.id.wait5:
+                    field7.setImageResource(R.drawable.wait5);
+                    field7.setContentDescription("13");
+                    break;
+                case R.id.wait10:
+                    field7.setImageResource(R.drawable.wait10);
+                    field7.setContentDescription("14");
+                    break;
+                case R.id.dotykSenzor11:
+                    field7.setImageResource(R.drawable.touch_pressed);
+                    field7.setContentDescription("15");
+                    break;
+                case R.id.soundSensorM25:
+                    field7.setImageResource(R.drawable.sound_lt_25);
+                    field7.setContentDescription("16");
+                    break;
+                case R.id.soundSensorM50:
+                    field7.setImageResource(R.drawable.sound_lt_50);
+                    field7.setContentDescription("17");
+                    break;
+                case R.id.soundSensorM75:
+                    field7.setImageResource(R.drawable.sound_lt_75);
+                    field7.setContentDescription("18");
+                    break;
+                case R.id.soundSensorV25:
+                    field7.setImageResource(R.drawable.sound_gt_25);
+                    field7.setContentDescription("19");
+                    break;
+                case R.id.soundSensorV50:
+                    field7.setImageResource(R.drawable.sound_gt_50);
+                    field7.setContentDescription("20");
+                    break;
+                case R.id.soundSensorV75:
+                    field7.setImageResource(R.drawable.sound_gt_75);
+                    field7.setContentDescription("21");
+                    break;
+                case R.id.lightSensorM25:
+                    field7.setImageResource(R.drawable.light_lt_25);
+                    field7.setContentDescription("22");
+                    break;
+                case R.id.lightSensorM50:
+                    field7.setImageResource(R.drawable.light_lt_50);
+                    field7.setContentDescription("23");
+                    break;
+                case R.id.lightSensorM75:
+                    field7.setImageResource(R.drawable.light_lt_75);
+                    field7.setContentDescription("24");
+                    break;
+                case R.id.lightSensorV25:
+                    field7.setImageResource(R.drawable.light_gt_25);
+                    field7.setContentDescription("25");
+                    break;
+                case R.id.lightSensorV50:
+                    field7.setImageResource(R.drawable.light_gt_50);
+                    field7.setContentDescription("26");
+                    break;
+                case R.id.lightSensorV75:
+                    field7.setImageResource(R.drawable.light_gt_75);
+                    field7.setContentDescription("27");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -1100,344 +1703,1145 @@ public class Main extends Activity implements BTPripojenie{
     // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod1(){
         ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
-        EditText parameter1 = (EditText) findViewById(R.id.par1);
-        param1 = Integer.parseInt(String.valueOf(parameter1.getText()));
         if(field1.getContentDescription() == "1"){
-            turnLeft(param1);
-            splnenyPohyb1 = true;
-            metoda1 = 4;
+            goForward1();
+            casovac1 = time1;
         } else if (field1.getContentDescription() == "2"){
-            turnRight(param1);
-            splnenyPohyb1 = true;
-            metoda1 = 4;
+            goForward3();
+            casovac1 = time3;
         } else if (field1.getContentDescription() == "3"){
-            goForward(param1);
-            splnenyPohyb1 = true;
-            metoda1 = 4;
+            goForward5();
+            casovac1 = time5;
         } else if (field1.getContentDescription() == "4"){
-            goBackward(param1);
-            splnenyPohyb1 = true;
-            metoda1 = 4;
+            goForward10();
+            casovac1 = time10;
         } else if (field1.getContentDescription() == "5"){
-            waitProgram(param1);
-            splnenyWait1 = true;
-            metoda1 = 5;
+            goBackward1();
+            casovac1 = time1;
         } else if (field1.getContentDescription() == "6"){
-            touchMetoda(param1);
-            metoda1 = 1;
+            goBackward3();
+            casovac1 = time3;
         } else if (field1.getContentDescription() == "7"){
-            soundMetoda(param1);
-            metoda1 = 2;
+            goBackward5();
+            casovac1 = time5;
         } else if (field1.getContentDescription() == "8"){
-            lightMetoda(param1);
-            metoda1 = 3;
+            goBackward10();
+            casovac1 = time10;
+        } else if (field1.getContentDescription() == "9"){
+            turnLeft();
+            casovac1 = time1;
+        } else if (field1.getContentDescription() == "10"){
+            turnRight();
+            casovac1 = time1;
+        } else if (field1.getContentDescription() == "11"){
+            wait1();
+            casovac1 = time1;
+        } else if (field1.getContentDescription() == "12"){
+            wait3();
+            casovac1 = time3;
+        } else if (field1.getContentDescription() == "13"){
+            wait5();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "14"){
+            wait10();
+            casovac1 = time10;
+        } else if (field1.getContentDescription() == "15"){
+            dotykMetoda();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "16"){
+            soundM25();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "17"){
+            soundM50();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "18"){
+            soundM75();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "19"){
+            soundV25();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "20"){
+            soundV50();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "21"){
+            soundV75();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "22"){
+            lightM25();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "23"){
+            lightM50();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "24"){
+            lightM75();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "25"){
+            lightV25();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "26"){
+            lightV50();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "27"){
+            lightV75();
+            casovac1 = time5;
         }
     }
 
-    // metoda pre druhe pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
     // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
     // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod2(){
         ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
-        EditText parameter2 = (EditText) findViewById(R.id.par2);
-        param2 = Integer.parseInt(String.valueOf(parameter2.getText()));
         if(field2.getContentDescription() == "1"){
-            turnLeft(param2);
-            splnenyPohyb2 = true;
-            metoda2 = 4;
+            goForward1();
+            casovac2 = time1;
         } else if (field2.getContentDescription() == "2"){
-            turnRight(param2);
-            splnenyPohyb2 = true;
-            metoda2 = 4;
+            goForward3();
+            casovac2 = time3;
         } else if (field2.getContentDescription() == "3"){
-            goForward(param2);
-            splnenyPohyb2 = true;
-            metoda2 = 4;
+            goForward5();
+            casovac2 = time5;
         } else if (field2.getContentDescription() == "4"){
-            goBackward(param2);
-            splnenyPohyb2 = true;
-            metoda2 = 4;
+            goForward10();
+            casovac2 = time10;
         } else if (field2.getContentDescription() == "5"){
-            waitProgram(param2);
-            splnenyWait2 = true;
-            metoda2 = 5;
+            goBackward1();
+            casovac2 = time1;
         } else if (field2.getContentDescription() == "6"){
-            touchMetoda(param2);
-            metoda2 = 1;
+            goBackward3();
+            casovac2 = time3;
         } else if (field2.getContentDescription() == "7"){
-            soundMetoda(param2);
-            metoda2 = 2;
+            goBackward5();
+            casovac2 = time5;
         } else if (field2.getContentDescription() == "8"){
-            lightMetoda(param2);
-            metoda2 = 3;
+            goBackward10();
+            casovac2 = time10;
+        } else if (field2.getContentDescription() == "9"){
+            turnLeft();
+            casovac2 = time1;
+        } else if (field2.getContentDescription() == "10"){
+            turnRight();
+            casovac2 = time1;
+        } else if (field2.getContentDescription() == "11"){
+            wait1();
+            casovac2 = time1;
+        } else if (field2.getContentDescription() == "12"){
+            wait3();
+            casovac2 = time3;
+        } else if (field2.getContentDescription() == "13"){
+            wait5();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "14"){
+            wait10();
+            casovac2 = time10;
+        } else if (field2.getContentDescription() == "15"){
+            dotykMetoda();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "16"){
+            soundM25();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "17"){
+            soundM50();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "18"){
+            soundM75();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "19"){
+            soundV25();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "20"){
+            soundV50();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "21"){
+            soundV75();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "22"){
+            lightM25();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "23"){
+            lightM50();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "24"){
+            lightM75();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "25"){
+            lightV25();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "26"){
+            lightV50();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "27"){
+            lightV75();
+            casovac2 = time5;
         }
     }
 
-    // metoda pre tretie pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
     // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
     // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod3(){
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
-        EditText parameter3 = (EditText) findViewById(R.id.par3);
-        param3 = Integer.parseInt(String.valueOf(parameter3.getText()));
         if(field3.getContentDescription() == "1"){
-            turnLeft(param3);
-            splnenyPohyb3 = true;
-            metoda3 = 4;
+            goForward1();
+            casovac3 = time1;
         } else if (field3.getContentDescription() == "2"){
-            turnRight(param3);
-            splnenyPohyb3 = true;
-            metoda3 = 4;
+            goForward3();
+            casovac3 = time3;
         } else if (field3.getContentDescription() == "3"){
-            goForward(param3);
-            splnenyPohyb3 = true;
-            metoda3 = 4;
+            goForward5();
+            casovac3 = time5;
         } else if (field3.getContentDescription() == "4"){
-            goBackward(param3);
-            splnenyPohyb3 = true;
-            metoda3 = 4;
+            goForward10();
+            casovac3 = time10;
         } else if (field3.getContentDescription() == "5"){
-            waitProgram(param3);
-            splnenyWait3 = true;
-            metoda3 = 5;
+            goBackward1();
+            casovac3 = time1;
         } else if (field3.getContentDescription() == "6"){
-            touchMetoda(param3);
-            metoda3 = 1;
+            goBackward3();
+            casovac3 = time3;
         } else if (field3.getContentDescription() == "7"){
-            soundMetoda(param3);
-            metoda3 = 2;
+            goBackward5();
+            casovac3 = time5;
         } else if (field3.getContentDescription() == "8"){
-            lightMetoda(param3);
-            metoda3 = 3;
+            goBackward10();
+            casovac3 = time10;
+        } else if (field3.getContentDescription() == "9"){
+            turnLeft();
+            casovac3 = time1;
+        } else if (field3.getContentDescription() == "10"){
+            turnRight();
+            casovac3 = time1;
+        } else if (field3.getContentDescription() == "11"){
+            wait1();
+            casovac3 = time1;
+        } else if (field3.getContentDescription() == "12"){
+            wait3();
+            casovac3 = time3;
+        } else if (field3.getContentDescription() == "13"){
+            wait5();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "14"){
+            wait10();
+            casovac3 = time10;
+        } else if (field3.getContentDescription() == "15"){
+            dotykMetoda();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "16"){
+            soundM25();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "17"){
+            soundM50();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "18"){
+            soundM75();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "19"){
+            soundV25();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "20"){
+            soundV50();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "21"){
+            soundV75();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "22"){
+            lightM25();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "23"){
+            lightM50();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "24"){
+            lightM75();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "25"){
+            lightV25();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "26"){
+            lightV50();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "27"){
+            lightV75();
+            casovac3 = time5;
         }
     }
 
-    // metoda pre stvrte pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
     // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
     // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+
     public void fieldMethod4(){
         ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
-        EditText parameter4 = (EditText) findViewById(R.id.par4);
-        param4 = Integer.parseInt(String.valueOf(parameter4.getText()));
         if(field4.getContentDescription() == "1"){
-            turnLeft(param4);
-            splnenyPohyb4 = true;
-            metoda4 = 4;
+            goForward1();
+            casovac4 = time1;
         } else if (field4.getContentDescription() == "2"){
-            turnRight(param4);
-            splnenyPohyb4 = true;
-            metoda4 = 4;
+            goForward3();
+            casovac4 = time3;
         } else if (field4.getContentDescription() == "3"){
-            goForward(param4);
-            splnenyPohyb4 = true;
-            metoda4 = 4;
+            goForward5();
+            casovac4 = time5;
         } else if (field4.getContentDescription() == "4"){
-            goBackward(param4);
-            splnenyPohyb4 = true;
-            metoda4 = 4;
+            goForward10();
+            casovac4 = time10;
         } else if (field4.getContentDescription() == "5"){
-            waitProgram(param4);
-            splnenyWait4 = true;
-            metoda4 = 5;
+            goBackward1();
+            casovac4 = time1;
         } else if (field4.getContentDescription() == "6"){
-            touchMetoda(param4);
-            metoda4 = 1;
+            goBackward3();
+            casovac4 = time3;
         } else if (field4.getContentDescription() == "7"){
-            soundMetoda(param4);
-            metoda4 = 2;
+            goBackward5();
+            casovac4 = time5;
         } else if (field4.getContentDescription() == "8"){
-            lightMetoda(param4);
-            metoda4 = 3;
+            goBackward10();
+            casovac4 = time10;
+        } else if (field4.getContentDescription() == "9"){
+            turnLeft();
+            casovac4 = time1;
+        } else if (field4.getContentDescription() == "10"){
+            turnRight();
+            casovac4 = time1;
+        } else if (field4.getContentDescription() == "11"){
+            wait1();
+            casovac4 = time1;
+        } else if (field4.getContentDescription() == "12"){
+            wait3();
+            casovac4 = time3;
+        } else if (field4.getContentDescription() == "13"){
+            wait5();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "14"){
+            wait10();
+            casovac4 = time10;
+        } else if (field4.getContentDescription() == "15"){
+            dotykMetoda();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "16"){
+            soundM25();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "17"){
+            soundM50();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "18"){
+            soundM75();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "19"){
+            soundV25();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "20"){
+            soundV50();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "21"){
+            soundV75();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "22"){
+            lightM25();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "23"){
+            lightM50();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "24"){
+            lightM75();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "25"){
+            lightV25();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "26"){
+            lightV50();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "27"){
+            lightV75();
+            casovac4 = time5;
         }
     }
 
-    // metoda pre piate pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
     // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
     // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+
     public void fieldMethod5(){
         ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
-        EditText parameter5 = (EditText) findViewById(R.id.par5);
-        param5 = Integer.parseInt(String.valueOf(parameter5.getText()));
         if(field5.getContentDescription() == "1"){
-            turnLeft(param5);
-            splnenyPohyb5 = true;
-            metoda5 = 4;
+            goForward1();
+            casovac5 = time1;
         } else if (field5.getContentDescription() == "2"){
-            turnRight(param5);
-            splnenyPohyb5 = true;
-            metoda5 = 4;
+            goForward3();
+            casovac5 = time3;
         } else if (field5.getContentDescription() == "3"){
-            goForward(param5);
-            splnenyPohyb5 = true;
-            metoda5 = 4;
+            goForward5();
+            casovac5 = time5;
         } else if (field5.getContentDescription() == "4"){
-            goBackward(param5);
-            splnenyPohyb5 = true;
-            metoda5 = 4;
+            goForward10();
+            casovac5 = time10;
         } else if (field5.getContentDescription() == "5"){
-            waitProgram(param5);
-            splnenyWait5 = true;
-            metoda5 = 5;
+            goBackward1();
+            casovac5 = time1;
         } else if (field5.getContentDescription() == "6"){
-            touchMetoda(param5);
-            metoda5 = 1;
+            goBackward3();
+            casovac5 = time3;
         } else if (field5.getContentDescription() == "7"){
-            soundMetoda(param5);
-            metoda5 = 2;
+            goBackward5();
+            casovac5 = time5;
         } else if (field5.getContentDescription() == "8"){
-            lightMetoda(param5);
-            metoda5 = 3;
+            goBackward10();
+            casovac5 = time10;
+        } else if (field5.getContentDescription() == "9"){
+            turnLeft();
+            casovac5 = time1;
+        } else if (field5.getContentDescription() == "10"){
+            turnRight();
+            casovac5 = time1;
+        } else if (field5.getContentDescription() == "11"){
+            wait1();
+            casovac5 = time1;
+        } else if (field5.getContentDescription() == "12"){
+            wait3();
+            casovac5 = time3;
+        } else if (field5.getContentDescription() == "13"){
+            wait5();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "14"){
+            wait10();
+            casovac5 = time10;
+        } else if (field5.getContentDescription() == "15"){
+            dotykMetoda();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "16"){
+            soundM25();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "17"){
+            soundM50();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "18"){
+            soundM75();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "19"){
+            soundV25();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "20"){
+            soundV50();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "21"){
+            soundV75();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "22"){
+            lightM25();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "23"){
+            lightM50();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "24"){
+            lightM75();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "25"){
+            lightV25();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "26"){
+            lightV50();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "27"){
+            lightV75();
+            casovac5 = time5;
+        }
+    }
+
+    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
+    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+
+    public void fieldMethod6(){
+        ImageButton field6 = (ImageButton) findViewById(R.id.Field6);
+        if(field6.getContentDescription() == "1"){
+            goForward1();
+            casovac6 = time1;
+        } else if (field6.getContentDescription() == "2"){
+            goForward3();
+            casovac6 = time3;
+        } else if (field6.getContentDescription() == "3"){
+            goForward5();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "4"){
+            goForward10();
+            casovac6 = time10;
+        } else if (field6.getContentDescription() == "5"){
+            goBackward1();
+            casovac6 = time1;
+        } else if (field6.getContentDescription() == "6"){
+            goBackward3();
+            casovac6 = time3;
+        } else if (field6.getContentDescription() == "7"){
+            goBackward5();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "8"){
+            goBackward10();
+            casovac6 = time10;
+        } else if (field6.getContentDescription() == "9"){
+            turnLeft();
+            casovac6 = time1;
+        } else if (field6.getContentDescription() == "10"){
+            turnRight();
+            casovac6 = time1;
+        } else if (field6.getContentDescription() == "11"){
+            wait1();
+            casovac6 = time1;
+        } else if (field6.getContentDescription() == "12"){
+            wait3();
+            casovac6 = time3;
+        } else if (field6.getContentDescription() == "13"){
+            wait5();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "14"){
+            wait10();
+            casovac6 = time10;
+        } else if (field6.getContentDescription() == "15"){
+            dotykMetoda();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "16"){
+            soundM25();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "17"){
+            soundM50();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "18"){
+            soundM75();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "19"){
+            soundV25();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "20"){
+            soundV50();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "21"){
+            soundV75();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "22"){
+            lightM25();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "23"){
+            lightM50();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "24"){
+            lightM75();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "25"){
+            lightV25();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "26"){
+            lightV50();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "27"){
+            lightV75();
+            casovac6 = time5;
+        }
+    }
+
+    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
+    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+    public void fieldMethod7(){
+        ImageButton field7 = (ImageButton) findViewById(R.id.Field7);
+        if(field7.getContentDescription() == "1"){
+            goForward1();
+        } else if (field7.getContentDescription() == "2"){
+            goForward3();
+        } else if (field7.getContentDescription() == "3"){
+            goForward5();
+        } else if (field7.getContentDescription() == "4"){
+            goForward10();
+        } else if (field7.getContentDescription() == "5"){
+            goBackward1();
+        } else if (field7.getContentDescription() == "6"){
+            goBackward3();
+        } else if (field7.getContentDescription() == "7"){
+            goBackward5();
+        } else if (field7.getContentDescription() == "8"){
+            goBackward10();
+        } else if (field7.getContentDescription() == "9"){
+            turnLeft();
+        } else if (field7.getContentDescription() == "10"){
+            turnRight();
+        } else if (field7.getContentDescription() == "11"){
+            wait1();
+        } else if (field7.getContentDescription() == "12"){
+            wait3();
+        } else if (field7.getContentDescription() == "13"){
+            wait5();
+        } else if (field7.getContentDescription() == "14"){
+            wait10();
+        } else if (field7.getContentDescription() == "15"){
+            dotykMetoda();
+        } else if (field7.getContentDescription() == "16"){
+            soundM25();
+        } else if (field7.getContentDescription() == "17"){
+            soundM50();
+        } else if (field7.getContentDescription() == "18"){
+            soundM75();
+        } else if (field7.getContentDescription() == "19"){
+            soundV25();
+        } else if (field7.getContentDescription() == "20"){
+            soundV50();
+        } else if (field7.getContentDescription() == "21"){
+            soundV75();
+        } else if (field7.getContentDescription() == "22"){
+            lightM25();
+        } else if (field7.getContentDescription() == "23"){
+            lightM50();
+        } else if (field7.getContentDescription() == "24"){
+            lightM75();
+        } else if (field7.getContentDescription() == "25"){
+            lightV25();
+        } else if (field7.getContentDescription() == "26"){
+            lightV50();
+        } else if (field7.getContentDescription() == "27"){
+            lightV75();
         }
     }
 
     // metoda na pohyb v pred, posielame s parametrom (cas = sekundy)
-    public void goForward(int param){
+    public void goForward1(){
+        splnenyPohyb = false;
         // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
-        updateMotorControlTime(100, 100, param);
+        updateMotorControlTime(power, power, 1);
         // spustenie timeru s parametrom casu, kt. sme  zadali
-        new CountDownTimer(param * 1000 - 1000, 1) {
+        new CountDownTimer(time1-1000, 1) {
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
                 // po skonceni countdowntimeru, posleme zase spravu o "zastaveni" motorov
                 updateMotorControl(0, 0);
+                splnenyPohyb = true;
+            }
+        }.start(); // spustenie timera
+    }
+
+    // metoda na pohyb v pred, posielame s parametrom (cas = sekundy)
+    public void goForward3(){
+        splnenyPohyb = false;
+        // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
+        updateMotorControlTime(power, power, 1);
+        // spustenie timeru s parametrom casu, kt. sme  zadali
+        new CountDownTimer(time3-1000, 1) {
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                // po skonceni countdowntimeru, posleme zase spravu o "zastaveni" motorov
+                updateMotorControl(0, 0);
+                splnenyPohyb = true;
+            }
+        }.start(); // spustenie timera
+    }
+
+    // metoda na pohyb v pred, posielame s parametrom (cas = sekundy)
+    public void goForward5(){
+        splnenyPohyb = false;
+        // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
+        updateMotorControlTime(power, power, 1);
+        // spustenie timeru s parametrom casu, kt. sme  zadali
+        new CountDownTimer(time5-1000, 1) {
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                // po skonceni countdowntimeru, posleme zase spravu o "zastaveni" motorov
+                updateMotorControl(0, 0);
+                splnenyPohyb = true;
+            }
+        }.start(); // spustenie timera
+    }
+
+    // metoda na pohyb v pred, posielame s parametrom (cas = sekundy)
+    public void goForward10(){
+        splnenyPohyb = false;
+        // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
+        updateMotorControlTime(power, power, 1);
+        // spustenie timeru s parametrom casu, kt. sme  zadali
+        new CountDownTimer(time10-1000, 1) {
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                // po skonceni countdowntimeru, posleme zase spravu o "zastaveni" motorov
+                updateMotorControl(0, 0);
+                splnenyPohyb = true;
             }
         }.start(); // spustenie timera
     }
 
     // metoda na pohyb vzad, posielame s parametrom (cas=sekundy)
-    public void goBackward(int param){
+    public void goBackward1(){
+        splnenyPohyb = false;
         // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
-        updateMotorControlTime(-100, -100, param);
+        updateMotorControlTime(-power, -power, 1);
         // a zase timer
-        new CountDownTimer(param * 1000 - 1000, 1){
+        new CountDownTimer(time1-1000, 1){
             public void onTick(long millisUntilFinished) {
             }
             // a zase zastavenie motora po skonceni
             public void onFinish() {
                 updateMotorControl(0, 0);
+                splnenyPohyb = true;
+            }
+        }.start(); // spustenie timera
+    }
+
+    // metoda na pohyb vzad, posielame s parametrom (cas=sekundy)
+    public void goBackward3(){
+        splnenyPohyb = false;
+        // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
+        updateMotorControlTime(-power, -power, 1);
+        // a zase timer
+        new CountDownTimer(time3-1000, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            // a zase zastavenie motora po skonceni
+            public void onFinish() {
+                updateMotorControl(0, 0);
+                splnenyPohyb = true;
+            }
+        }.start(); // spustenie timera
+    }
+
+    // metoda na pohyb vzad, posielame s parametrom (cas=sekundy)
+    public void goBackward5(){
+        splnenyPohyb = false;
+        // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
+        updateMotorControlTime(-power, -power, 1);
+        // a zase timer
+        new CountDownTimer(time5-1000, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            // a zase zastavenie motora po skonceni
+            public void onFinish() {
+                updateMotorControl(0, 0);
+                splnenyPohyb = true;
+            }
+        }.start(); // spustenie timera
+    }
+
+    // metoda na pohyb vzad, posielame s parametrom (cas=sekundy)
+    public void goBackward10(){
+        splnenyPohyb = false;
+        // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
+        updateMotorControlTime(-power, -power, 1);
+        // a zase timer
+        new CountDownTimer(time10-1000, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            // a zase zastavenie motora po skonceni
+            public void onFinish() {
+                updateMotorControl(0, 0);
+                splnenyPohyb = true;
             }
         }.start(); // spustenie timera
     }
 
     // metoda na otocenie do lava, parameter zatial neposielame, je to len otocenie
-    public void turnLeft(int param){
+    public void turnLeft(){
+        splnenyPohyb = false;
         // poslanie spravy so ziadnym oneskorenim, lavy motor a hodnota 30
         // (najviac mi to sedelo pre otocenie do lava)
         sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, 30, 0);
         sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, -30, 0);
         // a zase timer, tento krat ale posielame to otocenie aby trvalo 1 sekundu
         // metoda z lega  rotateControl sa dost zasekavala
-        new CountDownTimer(1001, 1){
+        new CountDownTimer(time1, 1){
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
                 // a zase sprava na zastavenie motora
                 sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, 0, 0);
                 sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, 0, 0);
+                splnenyPohyb = true;
             }
         }.start(); //spustenie timera
     }
 
     // taka ista metoda ako ta horna, len s inym otocenim motora
-    public void turnRight(int param){
+    public void turnRight(){
+        splnenyPohyb = false;
         sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, -30, 0);
         sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, 30, 0);
-        new CountDownTimer(1001, 1){
+        new CountDownTimer(time1, 1){
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
                 sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, 0, 0);
                 sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, 0, 0);
+                splnenyPohyb = true;
             }
         }.start();
     }
 
     // metoda na "cakanie"
     // posielame spravu so ziadnym oneskorenim, spravu o cakani a cas v milisekundach
-    public void waitProgram(int param){
-        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.WAIT, (param * 1000), 0);
+    public void wait1(){
+        splneneCakanie = false;
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.WAIT, (1000), 0);
+        new CountDownTimer(time1, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                splneneCakanie = true;
+            }
+        }.start(); //spustenie timera
     }
 
-    public void touchMetoda(int param){
-                if (dotyk){
-                    splnenyTouch = true;
-                }else{
-                    splnenyTouch = false;
+    // metoda na "cakanie"
+    // posielame spravu so ziadnym oneskorenim, spravu o cakani a cas v milisekundach
+    public void wait3(){
+        splneneCakanie = false;
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.WAIT, (3000), 0);
+        new CountDownTimer(time3, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                splneneCakanie = true;
+            }
+        }.start(); //spustenie timera
+    }
+
+    // metoda na "cakanie"
+    // posielame spravu so ziadnym oneskorenim, spravu o cakani a cas v milisekundach
+    public void wait5(){
+        splneneCakanie = false;
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.WAIT, (5000), 0);
+        new CountDownTimer(time5, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                splneneCakanie = true;
+            }
+        }.start(); //spustenie timera
+    }
+
+    // metoda na "cakanie"
+    // posielame spravu so ziadnym oneskorenim, spravu o cakani a cas v milisekundach
+    public void wait10(){
+        splneneCakanie = false;
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.WAIT, (10000), 0);
+        new CountDownTimer(time10, 1){
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                splneneCakanie = true;
+            }
+        }.start(); //spustenie timera
+    }
+
+    public void dotykMetoda(){
+        splnenyDotyk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(dotyk){
+                    splnenyDotyk = true;
                 }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyDotyk)
+                    showToast(R.string.touchIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
     }
 
-    public void soundMetoda(int param){
-        if (currentSoundL >= param)
-            splnenyZvuk = true;
-        else
-            splnenyZvuk = false;
+    public void soundM25(){
+        splnenyZvuk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentSoundL <= 25){
+                    this.cancel();
+                    splnenyZvuk = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyZvuk)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
     }
 
-    public void lightMetoda(int param){
-        if (currentLightL >= param)
-            splnenySvetlo = true;
-        else
-            splnenyZvuk = false;
+    public void soundM50(){
+        splnenyZvuk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentSoundL <= 50){
+                    this.cancel();
+                    splnenyZvuk = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyZvuk)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
     }
+
+    public void soundM75(){
+        splnenyZvuk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentSoundL <= 75){
+                    this.cancel();
+                    splnenyZvuk = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyZvuk)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void soundV25(){
+        splnenyZvuk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentSoundL >= 25){
+                    this.cancel();
+                    splnenyZvuk = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyZvuk)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void soundV50(){
+        splnenyZvuk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentSoundL >= 50){
+                    this.cancel();
+                    splnenyZvuk = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyZvuk)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void soundV75(){
+        splnenyZvuk = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentSoundL >= 75){
+                    this.cancel();
+                    splnenyZvuk = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyZvuk)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void lightM25(){
+        splneneSvetlo = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentLightL <= 25){
+                    this.cancel();
+                    splneneSvetlo = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splneneSvetlo)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void lightM50(){
+        splneneSvetlo = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentLightL <= 50){
+                    this.cancel();
+                    splneneSvetlo = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splneneSvetlo)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void lightM75(){
+        splneneSvetlo = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentLightL <= 75){
+                    this.cancel();
+                    splneneSvetlo = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splneneSvetlo)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void lightV25(){
+        splneneSvetlo = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentLightL >= 25){
+                    this.cancel();
+                    splneneSvetlo = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splneneSvetlo)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void lightV50(){
+        splneneSvetlo = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentLightL >= 50){
+                    this.cancel();
+                    splneneSvetlo = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splneneSvetlo)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    public void lightV75(){
+        splneneSvetlo = false;
+
+        new CountDownTimer(time5, 1) {
+            @Override
+            public void onTick(long l) {
+                if(currentLightL >= 75){
+                    this.cancel();
+                    splneneSvetlo = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splneneSvetlo)
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
 
     // a teda zacatie hlavnej metody, vykona sa prva metoda a potom sa spusti seria timerov,
     // ktore beru parametre z predoslych metod, na ktorych spustia timer a po skonceni spustia
     // dalsiu metodu, az kym neskoncime
     public void startProgramovanie(View view){
         fieldMethod1();
-        if(metoda1 == 1 && splnenyTouch || metoda1 == 2 && splnenyZvuk
-                || metoda1 == 3 && splnenySvetlo || metoda1 == 4 && splnenyPohyb1
-                || metoda1 == 5 && splnenyWait1)
-        new CountDownTimer(param1 * 1001, 1){
-            public void onTick(long millisUntilFinished) {
+        new CountDownTimer(casovac1 + 1000, 1) {
+            @Override
+            public void onTick(long l) {
             }
+            @Override
             public void onFinish() {
-                splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
-                fieldMethod2();
-                if(metoda2 == 1 && splnenyTouch || metoda1 == 2 && splnenyZvuk
-                        || metoda2 == 3 && splnenySvetlo || metoda2 == 4 && splnenyPohyb2
-                        || metoda2 == 5 && splnenyWait2)
-                new CountDownTimer(param2 * 1001, 1){
-                    public void onTick(long millisUntilFinished) {
-                    }
-                    public void onFinish() {
-                        splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
-                        fieldMethod3();
-                        if(metoda3 == 1 && splnenyTouch || metoda3 == 2 && splnenyZvuk
-                                || metoda3 == 3 && splnenySvetlo || metoda3 == 4 && splnenyPohyb3
-                                || metoda3 == 5 && splnenyWait3)
-                        new CountDownTimer(param3 * 1001, 1){
-                            public void onTick(long millisUntilFinished) {
-                            }
-                            public void onFinish() {
-                                splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
-                                fieldMethod4();
-                                if(metoda4 == 1 && splnenyTouch || metoda4 == 2 && splnenyZvuk
-                                        || metoda4 == 3 && splnenySvetlo || metoda4 == 4 && splnenyPohyb4
-                                        || metoda4 == 5 && splnenyWait4)
-                                new CountDownTimer(param4 * 1001, 1){
-                                    public void onTick(long millisUntilFinished) {
+                if (splnenyPohyb||splnenyZvuk||splnenyDotyk||splneneSvetlo||splneneCakanie){
+                    fieldMethod2();
+                    new CountDownTimer(casovac2 + 1000, 1) {
+                        @Override
+                        public void onTick(long l) {
+                        }
+                        @Override
+                        public void onFinish() {
+                            if (splnenyPohyb||splnenyZvuk||splnenyDotyk||splneneSvetlo||splneneCakanie){
+                                fieldMethod3();
+                                new CountDownTimer(casovac3 + 1000, 1) {
+                                    @Override
+                                    public void onTick(long l) {
                                     }
+                                    @Override
                                     public void onFinish() {
-                                        splnenyTouch = false; splnenySvetlo = false; splnenyZvuk = false;
-                                        fieldMethod5();
-                                        if(metoda5 == 1 && splnenyTouch || metoda5 == 2 && splnenyZvuk
-                                                || metoda5 == 3 && splnenySvetlo || metoda5 == 4 && splnenyPohyb5
-                                                || metoda5 == 5 && splnenyWait5)
-                                        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
-                                        metoda1 = 0; metoda2 = 0; metoda3 = 0; metoda4 = 0; metoda5 = 0;
-                                        splnenySvetlo = false; splnenyZvuk = false; splnenyTouch = false;
-                                        splnenyWait1 = false; splnenyWait2 = false; splnenyWait3 = false;
-                                        splnenyWait4 = false; splnenyWait5 = false; splnenyPohyb1 = false;
-                                        splnenyPohyb2 = false; splnenyPohyb3 = false; splnenyPohyb4 = false;
-                                        splnenyPohyb5 = false;
+                                        if (splnenyPohyb||splnenyZvuk||splnenyDotyk||splneneSvetlo||splneneCakanie){
+                                            fieldMethod4();
+                                            new CountDownTimer(casovac4 + 1000, 1) {
+                                                @Override
+                                                public void onTick(long l) {
+                                                }
+                                                @Override
+                                                public void onFinish() {
+                                                    if (splnenyPohyb||splnenyZvuk||splnenyDotyk||splneneSvetlo||splneneCakanie){
+                                                        fieldMethod5();
+                                                        new CountDownTimer(casovac5 + 1000, 1) {
+                                                            @Override
+                                                            public void onTick(long l) {
+                                                            }
+                                                            @Override
+                                                            public void onFinish() {
+                                                                if (splnenyPohyb||splnenyZvuk||splnenyDotyk||splneneSvetlo||splneneCakanie){
+                                                                    fieldMethod6();
+                                                                    new CountDownTimer(casovac6 + 1000, 1) {
+                                                                        @Override
+                                                                        public void onTick(long l) {
+                                                                        }
+                                                                        @Override
+                                                                        public void onFinish() {
+                                                                            if (splnenyPohyb||splnenyZvuk||splnenyDotyk||splneneSvetlo||splneneCakanie){
+                                                                                fieldMethod7();
+                                                                            }
+                                                                        }
+                                                                    }.start();
+                                                                }
+                                                            }
+                                                        }.start();
+                                                    }
+                                                }
+                                            }.start();
+                                        }
                                     }
                                 }.start();
                             }
-                        }.start();
-                    }
-                }.start();
+                        }
+                    }.start();
+                }
             }
         }.start();
     }
@@ -1507,30 +2911,24 @@ public class Main extends Activity implements BTPripojenie{
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
         ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
         ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
-        EditText ff1 = (EditText) findViewById(R.id.par1);
-        EditText ff2 = (EditText) findViewById(R.id.par2);
-        EditText ff3 = (EditText) findViewById(R.id.par3);
-        EditText ff4 = (EditText) findViewById(R.id.par4);
-        EditText ff5 = (EditText) findViewById(R.id.par5);
-
+        ImageButton field6 = (ImageButton) findViewById(R.id.Field6);
+        ImageButton field7 = (ImageButton) findViewById(R.id.Field7);
 
         field1.setContentDescription("0");
         field2.setContentDescription("0");
         field3.setContentDescription("0");
         field4.setContentDescription("0");
         field5.setContentDescription("0");
+        field6.setContentDescription("0");
+        field7.setContentDescription("0");
 
         field1.setImageResource(0);
         field2.setImageResource(0);
         field3.setImageResource(0);
         field4.setImageResource(0);
         field5.setImageResource(0);
-
-        ff1.setText("1");
-        ff2.setText("1");
-        ff3.setText("1");
-        ff4.setText("1");
-        ff5.setText("1");
+        field6.setImageResource(0);
+        field7.setImageResource(0);
     }
 
     public void zmenaSoundu(View view){

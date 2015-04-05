@@ -49,7 +49,7 @@
         android:layout_toRightOf="@+id/buttonDown"
         android:layout_toEndOf="@+id/buttonDown" />
 
-    <TextView android:id="@+id/textViewPower"
+    <TextView android:id="@+id/speedText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/speed"
@@ -60,7 +60,7 @@
         android:layout_width="fill_parent"
         android:id="@+id/power_seekbar"
         android:max="100"
-        android:layout_below="@+id/textViewPower"
+        android:layout_below="@+id/speedText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true">
     </SeekBar>
@@ -71,7 +71,7 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:layout_above="@+id/power_seekbar"
-        android:layout_toRightOf="@+id/textViewPower"
+        android:layout_toRightOf="@+id/speedText"
         android:layout_alignRight="@+id/buttonUp"
         android:layout_alignEnd="@+id/buttonUp" />
 

@@ -7,6 +7,32 @@
     tools:context="com.jurajpaulik.nxtcommander.Programovanie"
     android:background="#ffffffff">
 
+    <TextView
+        android:id="@+id/speedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/speed"
+        android:textSize="18sp" />
+
+    <SeekBar
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:id="@+id/power_seekBar"
+        android:max="100"
+        android:layout_below="@+id/speedText"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:indeterminate="false" />
+
+    <TextView
+        android:id="@+id/speedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/Field1"
+        android:layout_alignEnd="@+id/Field1" />
+
     <ImageButton
         android:layout_width="100dp"
         android:layout_height="100dp"
@@ -17,7 +43,7 @@
         android:enabled="true"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:layout_alignTop="@+id/Field3"
+        android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
@@ -28,9 +54,10 @@
         android:clickable="true"
         android:onClick="changeIcon2"
         android:longClickable="false"
-        android:layout_above="@+id/par1"
+        android:layout_alignTop="@+id/Field1"
         android:layout_toRightOf="@+id/Field1"
-        android:layout_toEndOf="@+id/Field1" />
+        android:layout_toEndOf="@+id/Field1"
+        android:layout_marginLeft="20dp" />
 
     <ImageButton
         android:layout_width="100dp"
@@ -39,9 +66,10 @@
         android:clickable="true"
         android:onClick="changeIcon3"
         android:longClickable="false"
+        android:layout_centerVertical="true"
         android:layout_toRightOf="@+id/Field2"
         android:layout_toEndOf="@+id/Field2"
-        android:layout_alignBottom="@+id/Field5" />
+        android:layout_marginLeft="20dp" />
 
     <ImageButton
         android:layout_width="100dp"
@@ -50,9 +78,10 @@
         android:clickable="true"
         android:onClick="changeIcon4"
         android:longClickable="false"
-        android:layout_alignTop="@+id/Field3"
+        android:layout_alignTop="@+id/Field2"
         android:layout_toRightOf="@+id/Field3"
-        android:layout_toEndOf="@+id/Field3" />
+        android:layout_toEndOf="@+id/Field3"
+        android:layout_marginLeft="20dp" />
 
     <ImageButton
         android:layout_width="100dp"
@@ -61,9 +90,10 @@
         android:clickable="true"
         android:onClick="changeIcon5"
         android:longClickable="false"
-        android:layout_alignParentTop="true"
+        android:layout_alignTop="@+id/Field4"
         android:layout_toRightOf="@+id/Field4"
-        android:layout_toEndOf="@+id/Field4" />
+        android:layout_toEndOf="@+id/Field4"
+        android:layout_marginLeft="20dp" />
 
     <Button
         android:layout_width="150dp"
@@ -73,111 +103,9 @@
         android:clickable="true"
         android:gravity="center"
         android:onClick="startProgramovanie"
-        android:layout_marginTop="122dp"
-        android:layout_below="@+id/par5"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:ems="10"
-        android:id="@+id/par1"
-        android:layout_below="@+id/Field1"
-        android:layout_toLeftOf="@+id/Field2"
-        android:layout_alignLeft="@+id/Field1"
-        android:layout_alignStart="@+id/Field1"
-        android:editable="true"
-        android:enabled="true"
-        android:numeric="integer"
-        android:text="1"
-        android:textAlignment="center"
-        android:textSize="15dp"
-        android:singleLine="true"
-        android:lines="1"
-        android:gravity="center" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:ems="10"
-        android:id="@+id/par2"
-        android:editable="true"
-        android:enabled="true"
-        android:numeric="integer"
-        android:text="1"
-        android:textAlignment="center"
-        android:textSize="15dp"
-        android:singleLine="true"
-        android:lines="1"
-        android:gravity="center"
-        android:layout_below="@+id/Field1"
-        android:layout_toLeftOf="@+id/Field3"
-        android:layout_toRightOf="@+id/Field1"
-        android:layout_toEndOf="@+id/Field1" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:ems="10"
-        android:id="@+id/par3"
-        android:editable="true"
-        android:enabled="true"
-        android:numeric="integer"
-        android:text="1"
-        android:textAlignment="center"
-        android:textSize="15dp"
-        android:singleLine="true"
-        android:lines="1"
-        android:gravity="center"
-        android:layout_below="@+id/Field2"
-        android:layout_toRightOf="@+id/Field2"
-        android:layout_alignRight="@+id/Field3"
-        android:layout_alignEnd="@+id/Field3" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:ems="10"
-        android:id="@+id/par4"
-        android:editable="true"
-        android:enabled="true"
-        android:numeric="integer"
-        android:text="1"
-        android:textAlignment="center"
-        android:textSize="15dp"
-        android:singleLine="true"
-        android:lines="1"
-        android:gravity="center"
-        android:layout_below="@+id/Field4"
-        android:layout_toLeftOf="@+id/Field5"
-        android:layout_toRightOf="@+id/Field3"
-        android:layout_toEndOf="@+id/Field3" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:ems="10"
-        android:id="@+id/par5"
-        android:editable="true"
-        android:enabled="true"
-        android:numeric="integer"
-        android:text="1"
-        android:textAlignment="center"
-        android:textSize="15dp"
-        android:singleLine="true"
-        android:lines="1"
-        android:gravity="center"
-        android:layout_below="@+id/Field4"
-        android:layout_alignRight="@+id/Field5"
-        android:layout_alignEnd="@+id/Field5"
-        android:layout_toRightOf="@+id/Field4"
-        android:layout_toEndOf="@+id/Field4" />
 
     <Button
         android:layout_width="150dp"
@@ -187,7 +115,7 @@
         android:clickable="true"
         android:gravity="center"
         android:onClick="deleteAll"
-        android:layout_below="@+id/par5"
+        android:layout_below="@+id/power_seekBar"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
@@ -298,5 +226,29 @@
         android:layout_alignTop="@+id/textUltra"
         android:layout_alignLeft="@+id/lightSenzor"
         android:layout_alignStart="@+id/lightSenzor" />
+
+    <ImageButton
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/Field6"
+        android:clickable="true"
+        android:onClick="changeIcon6"
+        android:longClickable="true"
+        android:layout_alignBottom="@+id/Field5"
+        android:layout_toRightOf="@+id/Field5"
+        android:layout_toEndOf="@+id/Field5"
+        android:layout_marginLeft="20dp" />
+
+    <ImageButton
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/Field7"
+        android:clickable="true"
+        android:onClick="changeIcon7"
+        android:longClickable="true"
+        android:layout_alignBottom="@+id/Field6"
+        android:layout_toRightOf="@+id/Field6"
+        android:layout_toEndOf="@+id/Field6"
+        android:layout_marginLeft="20dp" />
 
 </RelativeLayout>
