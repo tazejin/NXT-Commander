@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LegoNXT.iml" filepath="$PROJECT_DIR$/LegoNXT.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NXT Commander.iml" filepath="$PROJECT_DIR$/NXT Commander.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

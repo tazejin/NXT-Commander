@@ -281,7 +281,7 @@ public class Main extends Activity implements BTPripojenie{
                     textTouchSenzor.setVisibility(View.VISIBLE);
                     textSoundSenzor.setVisibility(View.VISIBLE);
                     //textBatterySenzor.setVisibility(View.VISIBLE);
-                    //textUltraSenzor.setVisibility(View.VISIBLE);
+                    textUltraSenzor.setVisibility(View.VISIBLE);
                     // ak je vypnuty tak to schovame
                 }else{
                     //textBattery.setVisibility(View.INVISIBLE);
@@ -293,7 +293,7 @@ public class Main extends Activity implements BTPripojenie{
                     textTouchSenzor.setVisibility(View.INVISIBLE);
                     textSoundSenzor.setVisibility(View.INVISIBLE);
                     //textBatterySenzor.setVisibility(View.INVISIBLE);
-                    //textUltraSenzor.setVisibility(View.INVISIBLE);
+                    textUltraSenzor.setVisibility(View.INVISIBLE);
                     // a zaslanie prikazu aby nam nesvietil senzor na cerveno
                     sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
                 }
@@ -543,7 +543,7 @@ public class Main extends Activity implements BTPripojenie{
                     // Timer, po ktorom sa spusti monitorovanie
                     // Preco ? Na zabranenie padov sposobenych posielanim spravy na ziskanie suborov
                     // ak sa tam priplietla ina sprava tak to nevedel spracovat string a padalo to
-                    new CountDownTimer(3000, 1) {
+                    new CountDownTimer(5000, 1) {
                         @Override
                         public void onTick(long l) {
                         }
@@ -555,13 +555,13 @@ public class Main extends Activity implements BTPripojenie{
                             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
                             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
                             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_TOUCH, 0, 0);
-                            //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.LS_WRITE, 0, 0);
+                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.LS_WRITE, 0, 0);
                             // a spusteni senzorov
                             dHandler.postDelayed(dRunnable, 100);
                             sHandler.postDelayed(sRunnable, 130);
                             zHandler.postDelayed(zRunnable, 160);
                             //bHandler.postDelayed(bRunnable, 190);
-                            //uHandler.postDelayed(uRunnable, 220);
+                            uHandler.postDelayed(uRunnable, 220);
                         }
                     }.start();
                     break;
@@ -629,26 +629,26 @@ public class Main extends Activity implements BTPripojenie{
                     if (myBTKomunikacia != null) {
                         byte[] fileMessage = myBTKomunikacia.getReturnMessage();
 
-                            String fileName = new String(fileMessage, 4, 20);
-                            fileName = fileName.replaceAll("\0","");
+                        String fileName = new String(fileMessage, 4, 20);
+                        fileName = fileName.replaceAll("\0", "");
 
-                            // ak najdeme subory .rxe a .rpg pridame ich do zoznamu programov
-                            if (fileName.endsWith(".rxe") || fileName.endsWith(".rpg")) {
-                                programList.add(fileName);
-                                // ak najdeme .rso pridame ich do zoznamu zvukov
-                            } else if (fileName.endsWith(".rso")) {
-                                soundList.add(fileName);
-                            }
-                            // najdeme dalsi subor
-                            // limitujeme pocet programov aby sme sa nedostali do nekonecneho loopu
-                            if (programList.size() <= MAX_PROGRAMS)
-                                sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES,
-                                        1, byteToInt(fileMessage[3]));
+                        // ak najdeme subory .rxe a .rpg pridame ich do zoznamu programov
+                        if (fileName.endsWith(".rxe") || fileName.endsWith(".rpg")) {
+                            programList.add(fileName);
+                            // ak najdeme .rso pridame ich do zoznamu zvukov
+                        } else if (fileName.endsWith(".rso")) {
+                            soundList.add(fileName);
+                        }
+                        // najdeme dalsi subor
+                        // limitujeme pocet programov aby sme sa nedostali do nekonecneho loopu
+                        if (programList.size() <= MAX_PROGRAMS)
+                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES,
+                                    1, byteToInt(fileMessage[3]));
                     }
                     break;
                 // sprava na zistenie stavu baterie
                 case BTKomunikacia.BATTERY_INFO:
-                    if (myBTKomunikacia != null){
+                    if (myBTKomunikacia != null) {
                         byte[] batteryMessage = myBTKomunikacia.getReturnMessage();
                         if (batteryMessage[1] == 0x0B) {
                             byte cbyte[] = new byte[2];
@@ -659,9 +659,9 @@ public class Main extends Activity implements BTPripojenie{
                         }
                         break;
                     }
-                // zistenie stavu o dotykovom senzore
+                    // zistenie stavu o dotykovom senzore
                 case BTKomunikacia.TOUCH_DATA:
-                    if (myBTKomunikacia != null){
+                    if (myBTKomunikacia != null) {
                         byte[] touchMessage = myBTKomunikacia.getReturnMessage();
                         int nestlaceny = -1;
                         int stlaceny1 = -73;
@@ -672,14 +672,14 @@ public class Main extends Activity implements BTPripojenie{
                             String touchData = String.valueOf(touchMessage[8]);
 
                             // ak nie je stlaceny senzor, hodnota = false a nastavime text do pola
-                        if(touchData.equals(String.valueOf(nestlaceny))){
-                            dotykovySenzor = getResources().getString(R.string.touch0);
-                            dotyk = false;
-                            // to iste co vyssie ale naopak
-                        } else if (touchData.equals(String.valueOf(stlaceny1))
-                                || touchData.equals(String.valueOf(stlaceny2))){
-                            dotykovySenzor = getResources().getString(R.string.touch1);
-                            dotyk = true;
+                            if (touchData.equals(String.valueOf(nestlaceny))) {
+                                dotykovySenzor = getResources().getString(R.string.touch0);
+                                dotyk = false;
+                                // to iste co vyssie ale naopak
+                            } else if (touchData.equals(String.valueOf(stlaceny1))
+                                    || touchData.equals(String.valueOf(stlaceny2))) {
+                                dotykovySenzor = getResources().getString(R.string.touch1);
+                                dotyk = true;
                             }
                         }
                     }
@@ -687,25 +687,25 @@ public class Main extends Activity implements BTPripojenie{
                 // zvukovy senzor
                 case BTKomunikacia.SOUND_DATA:
                     // ak sme pripojeny
-                    if (myBTKomunikacia != null){
+                    if (myBTKomunikacia != null) {
                         // zoberieme spravu zo streamu a priradime
                         byte[] soundMessage = myBTKomunikacia.getReturnMessage();
 
                         // ak prijmeme spravu o zvukovom senzore
-                        if(soundMessage[3] == 1){
+                        if (soundMessage[3] == 1) {
                             byte cbyte[] = new byte[2];
                             cbyte[0] = soundMessage[10];
                             cbyte[1] = soundMessage[11];
 
                             // zoberieme raw data z horneho pola, cez metodu vytiahneme short
                             // vynasobime 100 a vydelime 1023 (max hodnota pri raw data)
-                            currentSoundL = (fromBytes(cbyte)*100) / 1023;
+                            currentSoundL = (fromBytes(cbyte) * 100) / 1023;
                         }
                     }
                     break;
                 // svetelny senzor
                 case BTKomunikacia.LIGHT_DATA:
-                    if (myBTKomunikacia != null){
+                    if (myBTKomunikacia != null) {
                         byte[] lightMessage = myBTKomunikacia.getReturnMessage();
 
                         if (lightMessage[3] == 2) {
@@ -713,64 +713,24 @@ public class Main extends Activity implements BTPripojenie{
                             cbyte[0] = lightMessage[10];
                             cbyte[1] = lightMessage[11];
 
-                            currentLightL = (fromBytes(cbyte)*100) / 1023;
+                            currentLightL = (fromBytes(cbyte) * 100) / 1023;
                         }
                     }
                     break;
                 // vypusta zle data spat
                 case BTKomunikacia.ULTRASONIC_DATA:
-                    if (myBTKomunikacia != null){
+                    if (myBTKomunikacia != null) {
                         byte[] ultrasonicMessage = myBTKomunikacia.getReturnMessage();
 
                         if (ultrasonicMessage[3] == 3) {
-                            String UltraType = String.valueOf(ultrasonicMessage[6]);
-                            String UltraMode = String.valueOf(ultrasonicMessage[7]);
-                            String status = String.valueOf(ultrasonicMessage[2]);
-                            String raw1 = String.valueOf(ultrasonicMessage[8]);
-                            String raw2 = String.valueOf(ultrasonicMessage[9]);
-                            String norm1 = String.valueOf(ultrasonicMessage[10]);
-                            String norm2 = String.valueOf(ultrasonicMessage[11]);
-                            String scale1 = String.valueOf(ultrasonicMessage[12]);
-                            String scale2 = String.valueOf(ultrasonicMessage[13]);
-                            String cali1 = String.valueOf(ultrasonicMessage[14]);
-                            String cali2 = String.valueOf(ultrasonicMessage[15]);
-
-                            byte cbyte[] = new byte[2];
-                            cbyte[0] = ultrasonicMessage[10];
-                            cbyte[1] = ultrasonicMessage[11];
-
-                            //currentUltrasonicL = ((fromBytes(cbyte)*100)/1023);
-
-                            //Log.e("UltrasensorType: ", UltraType);
-                            //Log.e("UltrasensorMode: ", UltraMode);
-                            //Log.e("Status: ", status);
-
-                            String udaje = raw1+" "+raw2+" "+norm1+" "+norm2+" "+
-                                    scale1+" "+scale2+" "+cali1+" "+cali2;
-                            //Log.e("Udaje: ", String.valueOf(currentUltrasonicL));
-                            Log.e("Udaje2: ", udaje);
+                            currentUltrasonicL = (ultrasonicMessage[10]) * (-1);
                         }
                     }
                     break;
-                // workaround - posleme spravu do robota o zapisovani dat z ultrazvukoveho senzora
-                // a nasledne ich citame a potom zobrazujeme
+                // UNUSED
                 case BTKomunikacia.LS_DATA:
-                    if (myBTKomunikacia != null){
+                    if (myBTKomunikacia != null) {
                         byte[] lsDataMessage = myBTKomunikacia.getReturnMessage();
-
-                        Log.e("LS00: ", String.valueOf(lsDataMessage[0]));
-                        Log.e("LS01: ", String.valueOf(lsDataMessage[1]));
-                        Log.e("LS02: ", String.valueOf(lsDataMessage[2]));
-                        Log.e("LS03: ", String.valueOf(lsDataMessage[3]));
-                        Log.e("LS04: ", String.valueOf(lsDataMessage[4]));
-
-                        if(lsDataMessage[0] == 2){
-                            if(lsDataMessage[1] == 16){
-                                int temp = lsDataMessage[4];
-                                if (temp > 0)
-                                    currentUltrasonicL = temp;
-                            }
-                        }
                     }
                     break;
             }
@@ -822,7 +782,7 @@ public class Main extends Activity implements BTPripojenie{
     // zaslanie spravy o ziskani dat z ultrazvukoveho senzora
     public void udajeUltrasonic(){
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_ULTRASONIC_INFO, 0, 0);
-        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.LS_READ, 0, 0);
+        //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.LS_READ, 0, 0);
     }
 
     // najdenie NXT zariadenia

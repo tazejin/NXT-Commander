@@ -289,7 +289,7 @@ public class LCPSpravy {
         return message;
     }
 
-    // TODO
+    // nastavenie ultrazvukoveho senzora
     public static byte[] setUltraMessage(){
         byte[] message = new byte[5];
         message[0] = DIRECT_COMMAND_REPLY;
@@ -318,8 +318,8 @@ public class LCPSpravy {
         message[0] = DIRECT_COMMAND_REPLY;
         message[1] = LS_WRITE;
         message[2] = (byte) PORT3_ULTRASONIC;
-        message[3] = (byte) 15;
-        message[4] = (byte) 15;
+        message[3] = 16;
+        message[4] = 16;
 
         return message;
     }
