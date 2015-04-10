@@ -40,6 +40,8 @@ public class BTKomunikacia extends Thread {
     public static final int SET_SOUND = 108;
     public static final int SET_LIGHT = 109;
     public static final int SET_TOUCH = 110;
+    public static final int LS_WRITE = 111;
+    public static final int LS_READ = 112;
 
     public static final int SHOW_MESSAGE = 1000;
     public static final int STATE_CONNECTED = 1001;
@@ -60,6 +62,7 @@ public class BTKomunikacia extends Thread {
     public static final int SOUND_DATA = 1015;
     public static final int LIGHT_DATA = 1016;
     public static final int ULTRASONIC_DATA = 1017;
+    public static final int LS_DATA = 1018;
     public static final int DB = 0;
     public static final int DBA = 1;
     public static final int LIGHT_INACTIVE = 0;
@@ -290,8 +293,14 @@ public class BTKomunikacia extends Thread {
                     sendState(LIGHT_DATA);
                 } else if (message[3] == 3){
                     sendState(ULTRASONIC_DATA);
-                } break;
+                }
             }
+                break;
+            case LCPSpravy.LS_READ:
+                if(message.length >= 3){
+                    sendState(LS_DATA);
+                }
+                break;
         }
     }
 
@@ -410,6 +419,18 @@ public class BTKomunikacia extends Thread {
         sendMessageAndState(message);
     }
 
+    // TODO
+    public void lsWrite(){
+        byte[] message = LCPSpravy.LSWriteMessage();
+        sendMessageAndState(message);
+    }
+
+    // TODO
+    public void lsRead(){
+        byte[] message = LCPSpravy.LSReadMessage();
+        sendMessageAndState(message);
+    }
+
     // metoda na pockanie urciteho casu
     private void waitSomeTime(int millis) {
         try {
@@ -525,6 +546,13 @@ public class BTKomunikacia extends Thread {
                     break;
                 case SET_TOUCH:
                     setTouchSensor();
+                    break;
+                case LS_WRITE:
+                    setUltraSensor();
+                    lsWrite();
+                    break;
+                case LS_READ:
+                    lsRead();
                     break;
             }
         }

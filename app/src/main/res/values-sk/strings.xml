@@ -84,4 +84,6 @@
     <string name="wait5">Čakaj 5s</string>
     <string name="touchIncomplete">Dotykový senzor nebol zatlačený</string>
     <string name="soundIncomplete">Vypršal čas: Podmienka nesplnená</string>
+    <string name="ultraSensorM25">Vzdialenosť &lt;= 25cm</string>
+    <string name="ultraSensorV25">Vzdialenosť &gt;= 25cm</string>
 </resources>

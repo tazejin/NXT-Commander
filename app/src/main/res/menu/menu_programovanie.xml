@@ -56,4 +56,8 @@
         android:title="@string/lightSensorV75"/>
     <item android:id="@+id/dotykSenzor11"
         android:title="@string/touchSensor"/>
+    <item android:id="@+id/ultraZvukovyM25"
+        android:title="@string/ultraSensorM25"/>
+    <item android:id="@+id/ultraZvukovyV25"
+        android:title="@string/ultraSensorV25"/>
 </menu>

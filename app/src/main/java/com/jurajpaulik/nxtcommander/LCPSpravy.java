@@ -24,6 +24,8 @@ public class LCPSpravy {
     public static final int PORT1_SOUND = 1; // port 2 - zvukovy
     public static final int PORT2_LIGHT = 2; // port 3 - svetelny
     public static final int PORT3_ULTRASONIC = 3; // port 4 - ultrazvukovy
+    public static final byte LS_WRITE = 0x0F;
+    public static final byte LS_READ = 0x10;
 
     // Systemove prikazy, ktore riadia kocku
     public static final byte FIND_FIRST = (byte)0x86; // najdi prvy (subor)
@@ -307,6 +309,26 @@ public class LCPSpravy {
         message[2] = (byte) PORT0_TOUCH; // port 1 (na kocke) - dotykovy
         message[3] = (byte) 0x01; // typ senzora - switch
         message[4] = (byte) 0x20; // mod senzora - boolean
+
+        return message;
+    }
+
+    public static byte[] LSWriteMessage(){
+        byte[] message = new byte[5];
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = LS_WRITE;
+        message[2] = (byte) PORT3_ULTRASONIC;
+        message[3] = (byte) 15;
+        message[4] = (byte) 15;
+
+        return message;
+    }
+
+    public static byte[] LSReadMessage(){
+        byte[] message = new byte[3];
+        message[0] = DIRECT_COMMAND_REPLY;
+        message[1] = LS_READ;
+        message[2] = (byte) PORT3_ULTRASONIC;
 
         return message;
     }

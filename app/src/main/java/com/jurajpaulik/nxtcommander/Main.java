@@ -40,7 +40,6 @@ public class Main extends Activity implements BTPripojenie{
     public Activity thisActivity;
     public boolean btErrorPending = false;
     public boolean pairing;
-    public static boolean btzApp = false;
     int motorLeft;
     public int directionLeft;
     int motorRight;
@@ -77,6 +76,7 @@ public class Main extends Activity implements BTPripojenie{
     public boolean splneneSvetlo = false;
     public boolean splnenyPohyb = false;
     public boolean splneneCakanie = false;
+    public boolean splnenyUltraZ = false;
     public final long time1 = 500;
     public final long time3 = 2000;
     public final long time5 = 4000;
@@ -158,16 +158,6 @@ public class Main extends Activity implements BTPripojenie{
                 return true;
         }
         return false;
-    }
-
-    // Ak bol BT zapnuty pocas nasej aplikacie, tak po jej ukonceni ho aj vypneme
-    public static boolean BTcezAPP() {
-        return btzApp;
-    }
-
-    // sme zapli BT tak nam ho flagne
-    public static void appBT(boolean btOnByUs) {
-        Main.btzApp = btOnByUs;
     }
 
     // ak aplikacia sa momentalne paruje so zariadenim, vratime true
@@ -291,7 +281,7 @@ public class Main extends Activity implements BTPripojenie{
                     textTouchSenzor.setVisibility(View.VISIBLE);
                     textSoundSenzor.setVisibility(View.VISIBLE);
                     //textBatterySenzor.setVisibility(View.VISIBLE);
-                    textUltraSenzor.setVisibility(View.VISIBLE);
+                    //textUltraSenzor.setVisibility(View.VISIBLE);
                     // ak je vypnuty tak to schovame
                 }else{
                     //textBattery.setVisibility(View.INVISIBLE);
@@ -303,7 +293,7 @@ public class Main extends Activity implements BTPripojenie{
                     textTouchSenzor.setVisibility(View.INVISIBLE);
                     textSoundSenzor.setVisibility(View.INVISIBLE);
                     //textBatterySenzor.setVisibility(View.INVISIBLE);
-                    textUltraSenzor.setVisibility(View.INVISIBLE);
+                    //textUltraSenzor.setVisibility(View.INVISIBLE);
                     // a zaslanie prikazu aby nam nesvietil senzor na cerveno
                     sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
                 }
@@ -561,16 +551,17 @@ public class Main extends Activity implements BTPripojenie{
                         @Override
                         public void onFinish() {
                             // poslanie sprav o nastaveni senzorov
-                            sendBTCmessage(0, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
-                            sendBTCmessage(0, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
-                            sendBTCmessage(0, BTKomunikacia.SET_TOUCH, 0, 0);
-                            sendBTCmessage(0, BTKomunikacia.SET_ULTRA, 0, 0);
+                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_ULTRA, 0, 0);
+                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
+                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
+                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_TOUCH, 0, 0);
+                            //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.LS_WRITE, 0, 0);
                             // a spusteni senzorov
                             dHandler.postDelayed(dRunnable, 100);
                             sHandler.postDelayed(sRunnable, 130);
                             zHandler.postDelayed(zRunnable, 160);
                             //bHandler.postDelayed(bRunnable, 190);
-                            uHandler.postDelayed(uRunnable, 220);
+                            //uHandler.postDelayed(uRunnable, 220);
                         }
                     }.start();
                     break;
@@ -673,6 +664,8 @@ public class Main extends Activity implements BTPripojenie{
                     if (myBTKomunikacia != null){
                         byte[] touchMessage = myBTKomunikacia.getReturnMessage();
                         int nestlaceny = -1;
+                        int stlaceny1 = -73;
+                        int stlaceny2 = -75;
 
                         // ak prihnene spravu s portom senzoru 0
                         if (touchMessage[3] == 0) {
@@ -683,7 +676,8 @@ public class Main extends Activity implements BTPripojenie{
                             dotykovySenzor = getResources().getString(R.string.touch0);
                             dotyk = false;
                             // to iste co vyssie ale naopak
-                        } else{
+                        } else if (touchData.equals(String.valueOf(stlaceny1))
+                                || touchData.equals(String.valueOf(stlaceny2))){
                             dotykovySenzor = getResources().getString(R.string.touch1);
                             dotyk = true;
                             }
@@ -723,6 +717,7 @@ public class Main extends Activity implements BTPripojenie{
                         }
                     }
                     break;
+                // vypusta zle data spat
                 case BTKomunikacia.ULTRASONIC_DATA:
                     if (myBTKomunikacia != null){
                         byte[] ultrasonicMessage = myBTKomunikacia.getReturnMessage();
@@ -744,7 +739,7 @@ public class Main extends Activity implements BTPripojenie{
                             cbyte[0] = ultrasonicMessage[10];
                             cbyte[1] = ultrasonicMessage[11];
 
-                            currentUltrasonicL = ((fromBytes(cbyte)*100)/1023);
+                            //currentUltrasonicL = ((fromBytes(cbyte)*100)/1023);
 
                             //Log.e("UltrasensorType: ", UltraType);
                             //Log.e("UltrasensorMode: ", UltraMode);
@@ -754,6 +749,27 @@ public class Main extends Activity implements BTPripojenie{
                                     scale1+" "+scale2+" "+cali1+" "+cali2;
                             //Log.e("Udaje: ", String.valueOf(currentUltrasonicL));
                             Log.e("Udaje2: ", udaje);
+                        }
+                    }
+                    break;
+                // workaround - posleme spravu do robota o zapisovani dat z ultrazvukoveho senzora
+                // a nasledne ich citame a potom zobrazujeme
+                case BTKomunikacia.LS_DATA:
+                    if (myBTKomunikacia != null){
+                        byte[] lsDataMessage = myBTKomunikacia.getReturnMessage();
+
+                        Log.e("LS00: ", String.valueOf(lsDataMessage[0]));
+                        Log.e("LS01: ", String.valueOf(lsDataMessage[1]));
+                        Log.e("LS02: ", String.valueOf(lsDataMessage[2]));
+                        Log.e("LS03: ", String.valueOf(lsDataMessage[3]));
+                        Log.e("LS04: ", String.valueOf(lsDataMessage[4]));
+
+                        if(lsDataMessage[0] == 2){
+                            if(lsDataMessage[1] == 16){
+                                int temp = lsDataMessage[4];
+                                if (temp > 0)
+                                    currentUltrasonicL = temp;
+                            }
                         }
                     }
                     break;
@@ -806,6 +822,7 @@ public class Main extends Activity implements BTPripojenie{
     // zaslanie spravy o ziskani dat z ultrazvukoveho senzora
     public void udajeUltrasonic(){
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_ULTRASONIC_INFO, 0, 0);
+        sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.LS_READ, 0, 0);
     }
 
     // najdenie NXT zariadenia
@@ -832,7 +849,6 @@ public class Main extends Activity implements BTPripojenie{
             case REQUEST_ENABLE_BT:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        btzApp = true;
                         selectNXT();
                         break;
                     case Activity.RESULT_CANCELED:
@@ -1090,6 +1106,14 @@ public class Main extends Activity implements BTPripojenie{
                     field1.setImageResource(R.drawable.light_gt_75);
                     field1.setContentDescription("27");
                     break;
+                case R.id.ultraZvukovyM25:
+                    field1.setImageResource(R.drawable.ultra_lt_25);
+                    field1.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field1.setImageResource(R.drawable.ultra_gt_25);
+                    field1.setContentDescription("29");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -1203,6 +1227,14 @@ public class Main extends Activity implements BTPripojenie{
                 case R.id.lightSensorV75:
                     field2.setImageResource(R.drawable.light_gt_75);
                     field2.setContentDescription("27");
+                    break;
+                case R.id.ultraZvukovyM25:
+                    field2.setImageResource(R.drawable.ultra_lt_25);
+                    field2.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field2.setImageResource(R.drawable.ultra_gt_25);
+                    field2.setContentDescription("29");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -1318,6 +1350,14 @@ public class Main extends Activity implements BTPripojenie{
                     field3.setImageResource(R.drawable.light_gt_75);
                     field3.setContentDescription("27");
                     break;
+                case R.id.ultraZvukovyM25:
+                    field3.setImageResource(R.drawable.ultra_lt_25);
+                    field3.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field3.setImageResource(R.drawable.ultra_gt_25);
+                    field3.setContentDescription("29");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -1431,6 +1471,14 @@ public class Main extends Activity implements BTPripojenie{
                 case R.id.lightSensorV75:
                     field4.setImageResource(R.drawable.light_gt_75);
                     field4.setContentDescription("27");
+                    break;
+                case R.id.ultraZvukovyM25:
+                    field4.setImageResource(R.drawable.ultra_lt_25);
+                    field4.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field4.setImageResource(R.drawable.ultra_gt_25);
+                    field4.setContentDescription("29");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -1546,6 +1594,14 @@ public class Main extends Activity implements BTPripojenie{
                     field5.setImageResource(R.drawable.light_gt_75);
                     field5.setContentDescription("27");
                     break;
+                case R.id.ultraZvukovyM25:
+                    field5.setImageResource(R.drawable.ultra_lt_25);
+                    field5.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field5.setImageResource(R.drawable.ultra_gt_25);
+                    field5.setContentDescription("29");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -1658,6 +1714,14 @@ public class Main extends Activity implements BTPripojenie{
                 case R.id.lightSensorV75:
                     field6.setImageResource(R.drawable.light_gt_75);
                     field6.setContentDescription("27");
+                    break;
+                case R.id.ultraZvukovyM25:
+                    field6.setImageResource(R.drawable.ultra_lt_25);
+                    field6.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field6.setImageResource(R.drawable.ultra_gt_25);
+                    field6.setContentDescription("29");
                     break;
                 default:
                     return super.onContextItemSelected(cItem);
@@ -1772,6 +1836,14 @@ public class Main extends Activity implements BTPripojenie{
                     field7.setImageResource(R.drawable.light_gt_75);
                     field7.setContentDescription("27");
                     break;
+                case R.id.ultraZvukovyM25:
+                    field7.setImageResource(R.drawable.ultra_lt_25);
+                    field7.setContentDescription("28");
+                    break;
+                case R.id.ultraZvukovyV25:
+                    field7.setImageResource(R.drawable.ultra_gt_25);
+                    field7.setContentDescription("29");
+                    break;
                 default:
                     return super.onContextItemSelected(cItem);
             }
@@ -1865,6 +1937,12 @@ public class Main extends Activity implements BTPripojenie{
         } else if (field1.getContentDescription() == "27"){
             lightV75();
             casovac1 = time5;
+        } else if (field1.getContentDescription() == "28"){
+            ultraM25();
+            casovac1 = time5;
+        } else if (field1.getContentDescription() == "29"){
+            ultraV25();
+            casovac1 = time5;
         }
     }
 
@@ -1953,6 +2031,12 @@ public class Main extends Activity implements BTPripojenie{
             casovac2 = time5;
         } else if (field2.getContentDescription() == "27"){
             lightV75();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "28"){
+            ultraM25();
+            casovac2 = time5;
+        } else if (field2.getContentDescription() == "29"){
+            ultraV25();
             casovac2 = time5;
         }
     }
@@ -2043,6 +2127,12 @@ public class Main extends Activity implements BTPripojenie{
         } else if (field3.getContentDescription() == "27"){
             lightV75();
             casovac3 = time5;
+        } else if (field3.getContentDescription() == "28"){
+            ultraM25();
+            casovac3 = time5;
+        } else if (field3.getContentDescription() == "29"){
+            ultraV25();
+            casovac3 = time5;
         }
     }
 
@@ -2131,6 +2221,12 @@ public class Main extends Activity implements BTPripojenie{
             casovac4 = time5;
         } else if (field4.getContentDescription() == "27"){
             lightV75();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "28"){
+            ultraM25();
+            casovac4 = time5;
+        } else if (field4.getContentDescription() == "29"){
+            ultraV25();
             casovac4 = time5;
         }
     }
@@ -2221,6 +2317,12 @@ public class Main extends Activity implements BTPripojenie{
         } else if (field5.getContentDescription() == "27"){
             lightV75();
             casovac5 = time5;
+        } else if (field5.getContentDescription() == "28"){
+            ultraM25();
+            casovac5 = time5;
+        } else if (field5.getContentDescription() == "29"){
+            ultraV25();
+            casovac5 = time5;
         }
     }
 
@@ -2310,6 +2412,12 @@ public class Main extends Activity implements BTPripojenie{
         } else if (field6.getContentDescription() == "27"){
             lightV75();
             casovac6 = time5;
+        } else if (field6.getContentDescription() == "28"){
+            ultraM25();
+            casovac6 = time5;
+        } else if (field6.getContentDescription() == "29"){
+            ultraV25();
+            casovac6 = time5;
         }
     }
 
@@ -2372,6 +2480,10 @@ public class Main extends Activity implements BTPripojenie{
             lightV50();
         } else if (field7.getContentDescription() == "27"){
             lightV75();
+        } else if (field7.getContentDescription() == "28"){
+            ultraM25();
+        } else if (field7.getContentDescription() == "29"){
+            ultraV25();
         }
     }
 
@@ -2862,6 +2974,55 @@ public class Main extends Activity implements BTPripojenie{
         }.start();
     }
 
+    // podmienka na vzdialenost
+    public void ultraM25(){
+        splnenyUltraZ = false;
+
+        // spustime casovac na 5s
+        new CountDownTimer(time5, 1) {
+            @Override
+            // zistime ci hodnota je taka, aku sme zadali z podmienky
+            public void onTick(long l) {
+                if(currentUltrasonicL <= 25){
+                    // vypnutie casovaca
+                    this.cancel();
+                    // podmienka splnena
+                    splnenyUltraZ = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyUltraZ)
+                    // vypis hlasky ak nebola splnena
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
+
+    // podmienka na vzdialenost
+    public void ultraV25(){
+        splnenyUltraZ = false;
+
+        // spustime casovac na 5s
+        new CountDownTimer(time5, 1) {
+            @Override
+            // zistime ci hodnota je taka, aku sme zadali z podmienky
+            public void onTick(long l) {
+                if(currentUltrasonicL >= 25){
+                    // vypnutie casovaca
+                    this.cancel();
+                    // podmienka splnena
+                    splnenyUltraZ = true;
+                }
+            }
+            @Override
+            public void onFinish() {
+                if (!splnenyUltraZ)
+                    // vypis hlasky ak nebola splnena
+                    showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
+            }
+        }.start();
+    }
 
     // a teda zacatie hlavnej metody, vykona sa prva metoda a potom sa spusti seria timerov,
     // ktore beru parametre z predoslych metod, na ktorych spustia timer a po skonceni spustia
@@ -3007,7 +3168,7 @@ public class Main extends Activity implements BTPripojenie{
             udajeUltrasonic();
             ultrazvukovySenzor = String.valueOf(currentUltrasonicL);
             ultra.setText(ultrazvukovySenzor+" cm");
-            uHandler.postDelayed(this, 200);
+            uHandler.postDelayed(this, 500);
         }
     };
 

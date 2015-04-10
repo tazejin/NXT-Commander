@@ -38,6 +38,8 @@
     <string name="lightSensorV25">Light &gt;= 25</string>
     <string name="lightSensorV50">Light &gt;= 50</string>
     <string name="lightSensorV75">Light &gt;= 75</string>
+    <string name="ultraSensorV25">Distance &gt;= 25cm</string>
+    <string name="ultraSensorM25">Distance &lt;= 25cm</string>
     <string name="monitoring">Monitoring</string>
     <string name="touchIncomplete">Touch sensor was not pressed</string>
     <string name="reqIncomplete">Timeout: Requirement not met</string>
