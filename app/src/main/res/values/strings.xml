@@ -91,5 +91,13 @@
     <string name="title_activity_ovladanie">Controlling</string>
     <string name="title_activity_programovanie">Programming</string>
     <string name="title_activity_main_menu">MainMenu</string>
-            
+    <string name="backward">Backward</string>
+    <string name="forward">Forward</string>
+    <string name="lightLevel">Light level:</string>
+    <string name="lightSensor">Light</string>
+    <string name="soundIncomplete">Timeout: Requirement not met</string>
+    <string name="soundLevel">Sound level:</string>
+    <string name="soundSensor">Sound</string>
+    <string name="wait">Wait</string>
+
 </resources>

@@ -86,4 +86,5 @@
     <string name="soundIncomplete">Vypršal čas: Podmienka nesplnená</string>
     <string name="ultraSensorM25">Vzdialenosť &lt;= 25cm</string>
     <string name="ultraSensorV25">Vzdialenosť &gt;= 25cm</string>
+    <string name="reqIncomplete">Vypršal čas: Podmienka nesplnená</string>
 </resources>
