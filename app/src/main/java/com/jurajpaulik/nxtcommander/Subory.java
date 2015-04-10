@@ -22,22 +22,22 @@ class Subory {
         int position = 0;
         while(iterator.hasNext()) {
             programs[position++] = iterator.next();
-        } 	        
-    }    
+        }
+    }
 
     // Ukazanie suborov, ktore sme nasli ako dialog v aktivity
-	public void show() {
+    public void show() {
         AlertDialog.Builder builder = new AlertDialog.Builder(myActivity);
         builder.setItems(programs, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 startProgram(item);
             }
         });
-        builder.create().show();        
-	}
-	
-	private void startProgram(int number) {
+        builder.create().show();
+    }
+
+    // metoda na spustenie programu
+    private void startProgram(int number) {
         ((Main) myActivity).startProgram((String) programs[number]);
-	}
-		    
+    }
 }

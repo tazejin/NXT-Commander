@@ -7,32 +7,6 @@
     tools:context="com.jurajpaulik.nxtcommander.Programovanie"
     android:background="#ffffffff">
 
-    <TextView
-        android:id="@+id/speedText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/speed"
-        android:textSize="18sp" />
-
-    <SeekBar
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:id="@+id/power_seekBar"
-        android:max="100"
-        android:layout_below="@+id/speedText"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:indeterminate="false" />
-
-    <TextView
-        android:id="@+id/speedText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/Field1"
-        android:layout_alignEnd="@+id/Field1" />
-
     <ImageButton
         android:layout_width="100dp"
         android:layout_height="100dp"
@@ -115,7 +89,6 @@
         android:clickable="true"
         android:gravity="center"
         android:onClick="deleteAll"
-        android:layout_below="@+id/power_seekBar"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 

@@ -26,10 +26,9 @@ import android.widget.TextView;
 public class ZoznamZariadeni extends Activity {
     static final String PAROVANIE = "parujem";
 
-    // vracanie udajov naspat
+    // deklarovanie premennych
     public static String MENO_A_ADRESA_ZARIADENIA = "nxt_info";
     public static String EXTRA_ADRESA_ZARIADENIA = "adresa_zariadenia";
-
     private BluetoothAdapter mBtAdapter;
     private ArrayAdapter<String> mPairedDevicesArrayAdapter;
     private ArrayAdapter<String> mNewDevicesArrayAdapter;
@@ -38,11 +37,11 @@ public class ZoznamZariadeni extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Po spusteni aktivity otvorime okno
+        // Po spusteni aktivity otvorime okno so zoznamom zariadeni
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.zoznam_zariadeni);
  
-        // Poslanie statusu "ZRUSENE" ak stlacime spat na mobile
+        // Poslanie statusu "ZRUSENE"
         setResult(Activity.RESULT_CANCELED);
 
         // Zobrazenie buttonu na vyhladanie zariadeni
@@ -81,18 +80,22 @@ public class ZoznamZariadeni extends Activity {
 
         // Ak uz mame parovane zariadenia, pridame kazde do ArrayAdapter
         boolean legoDevicesFound = false;
-        
+
+        // ak je zoznam parovanych zariadeni vacsi nez 0
         if (pairedDevices.size() > 0) {
+            // zobrazime ich
             findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices) {
                 // Pridanie iba LEGO zariadeni
                 if (device.getAddress().startsWith(BTKomunikacia.OUI_LEGO)) {
                     legoDevicesFound = true;
+                    // vypis menu a mac adresy bt
                     mPairedDevicesArrayAdapter.add(device.getName() + "-" + device.getAddress());
                 }
             }
         }
-        
+
+        // ak nenajdeme ziadne lego zariadenia, vypiseme chybovu hlasku
         if (legoDevicesFound == false) {
             String noDevices = getResources().getText(R.string.ziadne_parovane).toString();
             mPairedDevicesArrayAdapter.add(noDevices);

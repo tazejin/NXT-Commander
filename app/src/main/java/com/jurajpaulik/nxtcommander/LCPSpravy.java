@@ -18,12 +18,12 @@ public class LCPSpravy {
     public static final byte RESET_MOTOR_POSITION = 0x0A; // resetovanie pozicie motora
     public static final byte GET_BATTERY_STATE = 0x0B; // ziskanie stavu baterie
     public static final byte GET_CURRENT_PROGRAM_NAME = 0x11; // ziskanie nazvu beziaceho programu
-    public static final byte GET_INPUT_MODE = 0x07;
-    public static final byte SET_INPUT_MODE = 0x05;
-    public static final int PORT0_TOUCH = 0;
-    public static final int PORT1_SOUND = 1;
-    public static final int PORT2_LIGHT = 2;
-    public static final int PORT3_ULTRASONIC = 3;
+    public static final byte GET_INPUT_MODE = 0x07; // ziskanie udajov o senzoroch spat
+    public static final byte SET_INPUT_MODE = 0x05; // nastavenie senzorov
+    public static final int PORT0_TOUCH = 0; // port 1 - touch
+    public static final int PORT1_SOUND = 1; // port 2 - zvukovy
+    public static final int PORT2_LIGHT = 2; // port 3 - svetelny
+    public static final int PORT3_ULTRASONIC = 3; // port 4 - ultrazvukovy
 
     // Systemove prikazy, ktore riadia kocku
     public static final byte FIND_FIRST = (byte)0x86; // najdi prvy (subor)
@@ -202,6 +202,7 @@ public class LCPSpravy {
         return message;
     }
 
+    // sprava o ziskani udajov z dotykoveho senzora
     public static byte[] getTouchMessage(){
         byte[] message = new byte[3];
 
@@ -212,6 +213,7 @@ public class LCPSpravy {
         return message;
     }
 
+    // sprava o ziskani udajov zo zvukoveho senzora
     public static byte[] getSoundMessage(){
         byte[] message = new byte[3];
 
@@ -222,6 +224,7 @@ public class LCPSpravy {
         return message;
     }
 
+    // sprava o ziskani udajov zo svetelneho senzora
     public static byte[] getLightMessage(){
         byte[] message = new byte[3];
 
@@ -232,6 +235,7 @@ public class LCPSpravy {
         return message;
     }
 
+    // sprava o ziskani udajov z ultrazvukoveho senzora
     public static byte[] getUltrasonicMessage(){
         byte[] message = new byte[3];
 
@@ -242,56 +246,67 @@ public class LCPSpravy {
         return message;
     }
 
+    // nastavenie svetelneho senzora
     public static byte[] setLightMessage(int type){
         byte[] message = new byte[5];
         message[0] = DIRECT_COMMAND_REPLY;
         message[1] = SET_INPUT_MODE;
         message[2] = (byte) PORT2_LIGHT;
 
+        // ak posleme zo spravu aj parameter hodnoty - typ senzora
+        //0 tak je svetelny senzor neaktivny
         if(type == 0)
             message[3] = (byte) 0x06;
+        // 1 tak meriame prostredie
         else if (type == 1)
             message[3] = (byte) 0x03;
+        // 2 tak meriame odraz svetla
         else if (type == 2)
             message[3] = (byte) 0x05;
-        message[4] = (byte) 0x00;
+        message[4] = (byte) 0x00; // raw mode
 
         return message;
     }
 
+    // nastavenie zvukoveho senzora
     public static byte[] setSoundMessage(int type){
         byte[] message = new byte[5];
         message[0] = DIRECT_COMMAND_REPLY;
         message[1] = SET_INPUT_MODE;
         message[2] = (byte) PORT1_SOUND;
 
+        // podla toho aky parameter posleme zo spravou tak merame (typ senzora)
+        // pri 0 DB
         if(type == 0)
             message[3] = (byte) 0x07;
+        // pri 1 DBA
         else if (type == 1)
             message[3] = (byte) 0x08;
-        message[4] = (byte) 0x00;
+        message[4] = (byte) 0x00; // mod senzora - raw mode
 
         return message;
     }
 
+    // TODO
     public static byte[] setUltraMessage(){
         byte[] message = new byte[5];
         message[0] = DIRECT_COMMAND_REPLY;
         message[1] = SET_INPUT_MODE;
         message[2] = (byte) PORT3_ULTRASONIC;
-        message[3] = (byte) 0x0B;
+        message[3] = (byte) 0x0A;
         message[4] = (byte) 0x00;
 
         return message;
     }
 
+    // nastavenie dotykoveho senzora
     public static byte[] setTouchMessage(){
         byte[] message = new byte[5];
-        message[0] = DIRECT_COMMAND_REPLY;
-        message[1] = SET_INPUT_MODE;
-        message[2] = (byte) PORT0_TOUCH;
-        message[3] = (byte) 0x01;
-        message[4] = (byte) 0x20;
+        message[0] = DIRECT_COMMAND_REPLY; // priamy prikaz a chceme odpoved
+        message[1] = SET_INPUT_MODE; // nastavenie senzora
+        message[2] = (byte) PORT0_TOUCH; // port 1 (na kocke) - dotykovy
+        message[3] = (byte) 0x01; // typ senzora - switch
+        message[4] = (byte) 0x20; // mod senzora - boolean
 
         return message;
     }

@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import static com.jurajpaulik.nxtcommander.Main.*;
+
 // Trieda sluzi na komunikaciu medzi NXT robotom a mobilom.
 // Komunikacia prebieha cez LCP (Lego communaction protocol)
 
@@ -116,18 +118,19 @@ public class BTKomunikacia extends Thread {
     // Thread je zniceny, ak zatvorime/prerusime spojenie s robotom
     @Override
     public void run() {
-        try {        
+        try {
+            // snazime sa vytvorit spojenie
             createNXTconnection();
         }
         catch (IOException ignored) {}
         while (connected) {
             try {
+                // ked sme pripojeny tak budeme odchytavat spravy
                 returnMessage = receiveMessage();
                 if ((returnMessage.length >= 2) && ((returnMessage[0] == LCPSpravy.REPLY) ||
                     (returnMessage[0] == LCPSpravy.DIRECT_COMMAND_NOREPLY)))
                     dispatchMessage(returnMessage);
             } catch (IOException e) {
-                // Ak uz je spojenie prerusene, neposielame oznamenie
                 if (connected)
                     sendState(STATE_ERROR_RECIEVER);
                 return;
@@ -251,6 +254,7 @@ public class BTKomunikacia extends Thread {
 
     // Odovzdavanie sprav na spracovanie
     // prijatu spravu porovnavame s preddefinovanymi z LEGO prirucky
+    // ked nam to vyhovuje, posleme "status" do hlavnej triede kde potom uz zpracuvavame spravy
     private void dispatchMessage(byte[] message) {
         switch (message[1]) {
             case LCPSpravy.GET_OUTPUT_STATE:
@@ -358,41 +362,49 @@ public class BTKomunikacia extends Thread {
         sendMessageAndState(message);
     }
 
+    // ziskanie info o dotykovom senzore
     private void getTouchInfo(){
         byte[] message = LCPSpravy.getTouchMessage();
         sendMessageAndState(message);
     }
 
+    // ziskanie info o zvukovom senzore
     private void getSoundInfo(){
         byte[] message = LCPSpravy.getSoundMessage();
         sendMessageAndState(message);
     }
 
+    // ziskanie info o svetelnom senzore
     private void getLightInfo(){
         byte[] message = LCPSpravy.getLightMessage();
         sendMessageAndState(message);
     }
 
+    // ziskanie info o ultrazvukovom senzore
     private void getUltrasonicInfo(){
         byte[] message = LCPSpravy.getUltrasonicMessage();
         sendMessageAndState(message);
     }
 
+    // nastavenie dotykeho senzora
     public void setSoundSensor(int type){
         byte[] message = LCPSpravy.setSoundMessage(type);
         sendMessageAndState(message);
     }
 
+    // nastavenie svetelneho senzora
     public void setLightSensor(int type){
         byte[] message = LCPSpravy.setLightMessage(type);
         sendMessageAndState(message);
     }
 
+    // nastavenie ultrazvukoveho senzora
     public void setUltraSensor(){
         byte[] message = LCPSpravy.setUltraMessage();
         sendMessageAndState(message);
     }
 
+    // nastavenie dotykeho senzora
     public void setTouchSensor(){
         byte[] message = LCPSpravy.setTouchMessage();
         sendMessageAndState(message);

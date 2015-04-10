@@ -28,9 +28,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
 
 public class Main extends Activity implements BTPripojenie{
 
@@ -48,13 +45,12 @@ public class Main extends Activity implements BTPripojenie{
     public int directionLeft;
     int motorRight;
     public boolean stopAlreadySent = false;
-    public int directionRight; // +/- 1
+    public int directionRight;
     public int directionAll;
     int motorAll;
     public List<String> programList;
     public List<String> soundList;
     public static final int MAX_PROGRAMS = 20;
-    public String programToStart;
     public Toast reusableToast;
     public int power = 100;
     public boolean command1;
@@ -92,59 +88,72 @@ public class Main extends Activity implements BTPripojenie{
     public long casovac5;
     public long casovac6;
 
+    // metoda pri vytvoreni Options Menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // naplnenie menu a pridanie poloziek do menu
         getMenuInflater().inflate(R.menu.menu_ovladanie, menu);
         return true;
     }
 
+    // metoda pri kliknuti na polozky z menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //return super.onOptionsItemSelected(item);
+        // switch podla itemId
         switch (item.getItemId()) {
-            // po stlaceni connect/disconnect spravime metody, kt. su spiate s nazvom
+            // stlacenie pripojenia
             case R.id.connect:
+                // ak uz nie sme pripojeny
                 if (myBTKomunikacia == null || !connected) {
+                    // tak vyhodime dialogove okno na pripojenie
                     selectNXT();
-                } else {
-                    destroyBTCommunicator();
                 }
                 return true;
+            // stlacenie odpojenia
             case R.id.disconnect:
+                // "znicime" komunikator a teda prerusime spojenie
                 destroyBTCommunicator();
                 return true;
-            // po kliknuti na ovladani zmizne z menu a objavi sa programovanie, updatneme menu
-            // a nadstavime content view na ovladanie
+            // stlacenie ovladania
             case R.id.controls:
+                // nastavenie layoutu na ovladanie
                 setContentView(R.layout.ovladanie);
+                // spustenie metody na nastavenei listenerov
                 nastavenieListenerov();
+                // korekcia posuvnika regulacie rychlosti
                 napravaSeekBaru();
+                // vypnutie toho "monitoringu" senzorov
                 switchMonitor();
                 return true;
-            // po kliknuti na programovanie zmizne z menu, objavi sa ovladanie, updatneme menu
-            // a nadstavime content view na programovanie
+            // stlacenie programovania
             case R.id.programming:
+                // nastavenie layoutu na programovaci rezim
                 setContentView(R.layout.programovanie);
                 return true;
-            // po kliknuti na spustenie programu vypiseme hlasku ak nenajdeme subory
-            // inak ich ukazeme v dialogu
+            // stlacenie programov
             case R.id.startSw:
+                // ak mame prazdny zoznam
                 if (programList.size() == 0) {
+                    // vypiseme hlasku o nenajdeni programov v kocke
                     showToast(R.string.no_programs_found, Toast.LENGTH_SHORT);
                     break;
                 }
+                // "naplnenie" suborov z programlistu
                 Subory mySubory = new Subory(this, programList);
+                // vyhodenie dialogoveho okna
                 mySubory.show();
                 return true;
-            // po kliknuti na prehranie zvuku vypiseme hlasku ak nejajdeme ziadne
-            // inak ich ukazeme v dialogu
+            // stlacenie zvukov
             case R.id.playSound:
+                // ak mame prazdny zoznam
                 if (soundList.size() == 0) {
+                    // vypiseme hlasku o nenajdeni zvukov v kocke
                     showToast(R.string.no_sound_found, Toast.LENGTH_SHORT);
                     break;
                 }
+                // "naplnenie" zvukov z listu
                 Subory mySounds = new Subory(this, soundList);
+                // vyhodenie dialogoveho okna
                 mySounds.show();
                 return true;
         }
@@ -167,19 +176,23 @@ public class Main extends Activity implements BTPripojenie{
         return pairing;
     }
 
+    // metoda pri "vytvoreni" aplikacie
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         thisActivity = this;
-        // nadstavenie na nase hlavne okno / ovladanie
+        // nastavenie na nase hlavne okno - ovladanie
         setContentView(R.layout.ovladanie);
         super.onStart();
+        // pripravenie toastu pre pouzitie
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 
+        // deklarovanie pola na ukazanie rychlosti
         TextView speedV = (TextView) findViewById(R.id.speedText);
+        // a nasledovne nastavenie podla pola rychlosti
         speedV.setText(String.valueOf(power));
 
-        // nadstavenie motorov pri klasickom zapojeni
+        // nastavenie motorov pri klasickom zapojeni
         motorLeft = BTKomunikacia.MOTOR_B;
         directionLeft = 1;
         motorRight = BTKomunikacia.MOTOR_C;
@@ -187,25 +200,39 @@ public class Main extends Activity implements BTPripojenie{
         motorAll = BTKomunikacia.MOTOR_ALL;
         directionAll = 1;
 
+        // nastavenie listenerov
         nastavenieListenerov();
+        // korekcia seek baru
         napravaSeekBaru();
+        // switch
         switchMonitor();
     }
 
     public void napravaSeekBaru(){
         // deklarovanie SeekBaru na indikaciu "rychlosti"
         final SeekBar powerSeekBar = (SeekBar) findViewById(R.id.power_seekbar);
+        // nastavenie hodnoty seekbaru podla rychlosti
         powerSeekBar.setProgress(power);
+        // a najdenie rychlostneho pola ...
+        TextView speedV = (TextView) findViewById(R.id.speedText);
+        // a nastavenie retazca podla rychlosti
+        speedV.setText(String.valueOf(power));
+
+        // nastavenie / vytvorenie listenera na nasom seek bare
         powerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            // metoda, kt. sleduje zmenu seekbaru
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress,
                                           boolean fromUser) {
-                // ak pri zmene je SeekBar na mensiu hodnote nez 25 ju nadstavime na 25
+                // ak sa snazi pouzivatel posunut seekbar na hodnotu mensiu ako 25
+                // tak ho aj tak nepustime
                 // je to hodnota, pri ktorej sa robot aspon trochu pohne
                 if (powerSeekBar.getProgress() < 25){
                     powerSeekBar.setProgress(25);
                 }
+                // a nastavime pole power z hodnoty seekbaru
                 power = powerSeekBar.getProgress();
+                // a este to pole s rychlostou
                 TextView speedV = (TextView) findViewById(R.id.speedText);
                 speedV.setText(String.valueOf(power));
             }
@@ -221,11 +248,11 @@ public class Main extends Activity implements BTPripojenie{
     }
 
     public void nastavenieListenerov(){
-        // nadstavenie hodnot pre plynule ovladanie, podla parametrov sa generuju data posielane
+        // nastavenie hodnot pre plynule ovladanie, podla parametrov sa generuju data posielane
         // do nxt kocky, ktora podla toho otaca motor
         // motor berie hodnotu od -100 do 100
         // hodnoty su uvedene nizsie, podrobnosti v metode na ovladanie
-        // 0.5 pre polovicne otocenie, cize do prava alebo do lava
+        // 0.5 pre polovicne otocenie, cize do prava alebo do lava (nasobia sa rychlostou)
         ImageButton buttonUp = (ImageButton) findViewById(R.id.buttonUp);
         buttonUp.setOnTouchListener(new DirectionButtonOnTouchListener(1, 1));
         ImageButton buttonLeft = (ImageButton) findViewById(R.id.buttonLeft);
@@ -237,43 +264,47 @@ public class Main extends Activity implements BTPripojenie{
     }
 
     public void switchMonitor(){
+        // deklarovanie vsetky textov
         Switch switchM = (Switch) findViewById(R.id.switchMonitoring);
         final TextView textBattery = (TextView) findViewById(R.id.textBattery);
         final TextView textSound = (TextView) findViewById(R.id.textSound);
         final TextView textTouch = (TextView) findViewById(R.id.textTouch);
         final TextView textLight = (TextView) findViewById(R.id.textLight);
-        //final TextView textUltra = (TextView) findViewById(R.id.textUltra);
+        final TextView textUltra = (TextView) findViewById(R.id.textUltra);
         final TextView textLightSenzor = (TextView) findViewById(R.id.lightSenzor);
         final TextView textTouchSenzor = (TextView) findViewById(R.id.touchSenzor);
         final TextView textSoundSenzor = (TextView) findViewById(R.id.soundSenzor);
         final TextView textBatterySenzor = (TextView) findViewById(R.id.batterySenzor);
-        //final TextView textUltraSenzor = (TextView) findViewById(R.id.ultraSenzor);
+        final TextView textUltraSenzor = (TextView) findViewById(R.id.ultraSenzor);
 
         switchM.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                //ak je swtich zapnuty, zobrazime vsetky texty
                 if (compoundButton.isChecked()){
                     //textBattery.setVisibility(View.VISIBLE);
                     textSound.setVisibility(View.VISIBLE);
                     textTouch.setVisibility(View.VISIBLE);
                     textLight.setVisibility(View.VISIBLE);
-                    //textUltra.setVisibility(View.VISIBLE);
+                    textUltra.setVisibility(View.VISIBLE);
                     textLightSenzor.setVisibility(View.VISIBLE);
                     textTouchSenzor.setVisibility(View.VISIBLE);
                     textSoundSenzor.setVisibility(View.VISIBLE);
                     //textBatterySenzor.setVisibility(View.VISIBLE);
-                    //textUltraSenzor.setVisibility(View.VISIBLE);
+                    textUltraSenzor.setVisibility(View.VISIBLE);
+                    // ak je vypnuty tak to schovame
                 }else{
                     //textBattery.setVisibility(View.INVISIBLE);
                     textSound.setVisibility(View.INVISIBLE);
                     textTouch.setVisibility(View.INVISIBLE);
                     textLight.setVisibility(View.INVISIBLE);
-                    //textUltra.setVisibility(View.INVISIBLE);
+                    textUltra.setVisibility(View.INVISIBLE);
                     textLightSenzor.setVisibility(View.INVISIBLE);
                     textTouchSenzor.setVisibility(View.INVISIBLE);
                     textSoundSenzor.setVisibility(View.INVISIBLE);
                     //textBatterySenzor.setVisibility(View.INVISIBLE);
-                    //textUltraSenzor.setVisibility(View.INVISIBLE);
+                    textUltraSenzor.setVisibility(View.INVISIBLE);
+                    // a zaslanie prikazu aby nam nesvietil senzor na cerveno
                     sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.SET_LIGHT, BTKomunikacia.LIGHT_INACTIVE, 0);
                 }
             }
@@ -325,7 +356,7 @@ public class Main extends Activity implements BTPripojenie{
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.START_PROGRAM, name);
     }
 
-    // Nadstavenie listeneru pre tlacidla, ktore su v layout.ovladanie
+    // Nastavenie listeneru pre tlacidla, ktore su v layout.ovladanie
     public class DirectionButtonOnTouchListener implements View.OnTouchListener {
         public double leftMotor;
         public double rightMotor;
@@ -355,11 +386,11 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // Posielanie parametrov do tejto metody, ktora ju posle dalej na komunikaciu do nxt kocky
+    // Posielanie parametrov na pohyb do tejto metody, ktora ju posle dalej na komunikaciu do nxt kocky
     public void updateMotorControl(double left, double right) {
-
         if (myBTKomunikacia != null) {
             // ak je hodnota 0, tak sa robot nehybe
+            // ak posielame hodnoty 0 tak nebudeme predsa stale posielat, spravy ...
             if ((left == 0) && (right == 0)) {
                 if (stopAlreadySent)
                     return;
@@ -433,7 +464,9 @@ public class Main extends Activity implements BTPripojenie{
         try {
         }
         catch (IndexOutOfBoundsException ex) {
+            // ak sa nenasiel senzor
             showToast(R.string.sensor_initialization_failure, Toast.LENGTH_LONG);
+            // prerusenie komunikatora
             destroyBTCommunicator();
             finish();
         }
@@ -444,7 +477,7 @@ public class Main extends Activity implements BTPripojenie{
     protected void onStart() {
         super.onStart();
 
-        // ak nemame zapnuty BT, tak ho zapneme
+        // ak zariadenie nema BT, vypiseme hlasku
         if (BluetoothAdapter.getDefaultAdapter()==null) {
             showToast(R.string.bt_initialization_failure, Toast.LENGTH_LONG);
             destroyBTCommunicator();
@@ -452,9 +485,11 @@ public class Main extends Activity implements BTPripojenie{
             return;
         }
 
+        // nemame zapnute BT, tak spustime "aktivitu" na zapnutie BT
         if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            // inac spustime vyber NXT robota
         } else {
             selectNXT();
         }
@@ -464,13 +499,14 @@ public class Main extends Activity implements BTPripojenie{
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // znicime komunikator
         destroyBTCommunicator();
     }
 
     // pri pozastaveni aktivity ...
     @Override
     public void onPause() {
-        //destroyBTCommunicator();
+        destroyBTCommunicator();
         super.onStop();
     }
 
@@ -503,24 +539,40 @@ public class Main extends Activity implements BTPripojenie{
                 case BTKomunikacia.SHOW_MESSAGE:
                     showToast(myMessage.getData().getString("toastText"), Toast.LENGTH_SHORT);
                     break;
-                // ak sme pripojeny, nadstavime hodnotu, zobrazime zoznam zvukov a programov,
-                // updatneme menu a pripojovaci dialog dame prec
-                // na zistenie suborov posleme get_firmware_version, kt. zisti subory
+                // ak prijmeme spravu o pripojenom zariadeni; nastavime hodnotu connected;
+                // vytvorime array listy pre programy a zvuky
                 case BTKomunikacia.STATE_CONNECTED:
                     connected = true;
                     programList = new ArrayList<>();
                     soundList = new ArrayList<>();
+                    // dame prec dialog o pripojeni
                     connectingProgressDialog.dismiss();
-                    //sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_FIRMWARE_VERSION, 0, 0);
-                    // nasledne prehladame robota a vsetky subory v nom
-                    sendBTCmessage(1, BTKomunikacia.FIND_FILES, 0, 0);
-                    sendBTCmessage(2, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
-                    sendBTCmessage(2, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
-                    sendBTCmessage(2, BTKomunikacia.SET_TOUCH, 0, 0);
-                    dHandler.postDelayed(dRunnable, 100);
-                    sHandler.postDelayed(sRunnable, 100);
-                    zHandler.postDelayed(zRunnable, 100);
-                    bHandler.postDelayed(bRunnable, 100);
+                    // sprava o ziskani suborov
+                    sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES, 0, 0);
+
+                    // Timer, po ktorom sa spusti monitorovanie
+                    // Preco ? Na zabranenie padov sposobenych posielanim spravy na ziskanie suborov
+                    // ak sa tam priplietla ina sprava tak to nevedel spracovat string a padalo to
+                    new CountDownTimer(3000, 1) {
+                        @Override
+                        public void onTick(long l) {
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            // poslanie sprav o nastaveni senzorov
+                            sendBTCmessage(0, BTKomunikacia.SET_SOUND, BTKomunikacia.DB, 0);
+                            sendBTCmessage(0, BTKomunikacia.SET_LIGHT, BTKomunikacia.REFLECTION, 0);
+                            sendBTCmessage(0, BTKomunikacia.SET_TOUCH, 0, 0);
+                            sendBTCmessage(0, BTKomunikacia.SET_ULTRA, 0, 0);
+                            // a spusteni senzorov
+                            dHandler.postDelayed(dRunnable, 100);
+                            sHandler.postDelayed(sRunnable, 130);
+                            zHandler.postDelayed(zRunnable, 160);
+                            //bHandler.postDelayed(bRunnable, 190);
+                            uHandler.postDelayed(uRunnable, 220);
+                        }
+                    }.start();
                     break;
                 // po prijati spravy o stave motora ak sme pripojeny k nxt tak vratime spravu
                 // o pozicii motora
@@ -585,21 +637,22 @@ public class Main extends Activity implements BTPripojenie{
                     // ak sme pripojeny
                     if (myBTKomunikacia != null) {
                         byte[] fileMessage = myBTKomunikacia.getReturnMessage();
-                        String fileName = new String(fileMessage, 4, 20);
-                        fileName = fileName.replaceAll("\0","");
 
-                        // ak najdeme subory .rxe a .rpg pridame ich do zoznamu programov
-                        if (fileName.endsWith(".rxe") || fileName.endsWith(".rpg")) {
-                            programList.add(fileName);
-                            // ak najdeme .rso pridame ich do zoznamu zvukov
-                        } else if (fileName.endsWith(".rso")) {
-                            soundList.add(fileName);
-                        }
-                        // najdeme dalsi subor
-                        // limitujeme pocet programov aby sme sa nedostali do nekonecneho loopu
-                        if (programList.size() <= MAX_PROGRAMS)
-                            sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES,
-                                    1, byteToInt(fileMessage[3]));
+                            String fileName = new String(fileMessage, 4, 20);
+                            fileName = fileName.replaceAll("\0","");
+
+                            // ak najdeme subory .rxe a .rpg pridame ich do zoznamu programov
+                            if (fileName.endsWith(".rxe") || fileName.endsWith(".rpg")) {
+                                programList.add(fileName);
+                                // ak najdeme .rso pridame ich do zoznamu zvukov
+                            } else if (fileName.endsWith(".rso")) {
+                                soundList.add(fileName);
+                            }
+                            // najdeme dalsi subor
+                            // limitujeme pocet programov aby sme sa nedostali do nekonecneho loopu
+                            if (programList.size() <= MAX_PROGRAMS)
+                                sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.FIND_FILES,
+                                        1, byteToInt(fileMessage[3]));
                     }
                     break;
                 // sprava na zistenie stavu baterie
@@ -615,38 +668,48 @@ public class Main extends Activity implements BTPripojenie{
                         }
                         break;
                     }
+                // zistenie stavu o dotykovom senzore
                 case BTKomunikacia.TOUCH_DATA:
                     if (myBTKomunikacia != null){
                         byte[] touchMessage = myBTKomunikacia.getReturnMessage();
                         int nestlaceny = -1;
-                        int stlaceny = -73;
 
+                        // ak prihnene spravu s portom senzoru 0
                         if (touchMessage[3] == 0) {
                             String touchData = String.valueOf(touchMessage[8]);
 
+                            // ak nie je stlaceny senzor, hodnota = false a nastavime text do pola
                         if(touchData.equals(String.valueOf(nestlaceny))){
                             dotykovySenzor = getResources().getString(R.string.touch0);
                             dotyk = false;
-                        } else if (touchData.equals(String.valueOf(stlaceny))){
+                            // to iste co vyssie ale naopak
+                        } else{
                             dotykovySenzor = getResources().getString(R.string.touch1);
                             dotyk = true;
                             }
                         }
                     }
                     break;
+                // zvukovy senzor
                 case BTKomunikacia.SOUND_DATA:
+                    // ak sme pripojeny
                     if (myBTKomunikacia != null){
+                        // zoberieme spravu zo streamu a priradime
                         byte[] soundMessage = myBTKomunikacia.getReturnMessage();
 
+                        // ak prijmeme spravu o zvukovom senzore
                         if(soundMessage[3] == 1){
                             byte cbyte[] = new byte[2];
                             cbyte[0] = soundMessage[10];
                             cbyte[1] = soundMessage[11];
 
+                            // zoberieme raw data z horneho pola, cez metodu vytiahneme short
+                            // vynasobime 100 a vydelime 1023 (max hodnota pri raw data)
                             currentSoundL = (fromBytes(cbyte)*100) / 1023;
                         }
                     }
                     break;
+                // svetelny senzor
                 case BTKomunikacia.LIGHT_DATA:
                     if (myBTKomunikacia != null){
                         byte[] lightMessage = myBTKomunikacia.getReturnMessage();
@@ -681,7 +744,7 @@ public class Main extends Activity implements BTPripojenie{
                             cbyte[0] = ultrasonicMessage[10];
                             cbyte[1] = ultrasonicMessage[11];
 
-                            currentUltrasonicL = fromBytes(cbyte);
+                            currentUltrasonicL = ((fromBytes(cbyte)*100)/1023);
 
                             //Log.e("UltrasensorType: ", UltraType);
                             //Log.e("UltrasensorMode: ", UltraMode);
@@ -690,7 +753,7 @@ public class Main extends Activity implements BTPripojenie{
                             String udaje = raw1+" "+raw2+" "+norm1+" "+norm2+" "+
                                     scale1+" "+scale2+" "+cali1+" "+cali2;
                             //Log.e("Udaje: ", String.valueOf(currentUltrasonicL));
-                            //Log.e("Udaje2: ", udaje);
+                            Log.e("Udaje2: ", udaje);
                         }
                     }
                     break;
@@ -707,6 +770,7 @@ public class Main extends Activity implements BTPripojenie{
         return intValue;
     }
 
+    // prevedenie bajtov z pola
     public static int fromBytes(byte cbyte[])
     {
         ByteBuffer bytebuffer = ByteBuffer.wrap(cbyte);
@@ -724,18 +788,22 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
+    // zaslanie spravy o ziskani dat z dotykoveho senzora
     public void udajeTouch(){
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_TOUCH_INFO, 0, 0);
     }
 
+    // zaslanie spravy o ziskani dat zo zvukoveho senzora
     public void udajeSound(){
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_SOUND_INFO, 0, 0);
     }
 
+    // zaslanie spravy o ziskani dat zo svetelneho senzora
     public void udajeLight(){
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_LIGHT_INFO, 0, 0);
     }
 
+    // zaslanie spravy o ziskani dat z ultrazvukoveho senzora
     public void udajeUltrasonic(){
         sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_ULTRASONIC_INFO, 0, 0);
     }
@@ -836,38 +904,49 @@ public class Main extends Activity implements BTPripojenie{
         super.onCreateContextMenu(cMenu, view, cMenuInfo);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_programovanie, cMenu);
+        // zistime ID pola
         buttonID = view.getId();
-
+        // a potom nastavime bool na pole, kt mame
         if (buttonID==R.id.Field1){
             command1 = true;
             command2 = false;
             command3 = false;
             command4 = false;
             command5 = false;
+            command6 = false;
+            command7 = false;
         } else if (buttonID==R.id.Field2){
             command1 = false;
             command2 = true;
             command3 = false;
             command4 = false;
             command5 = false;
+            command6 = false;
+            command7 = false;
         } else if (buttonID==R.id.Field3){
             command1 = false;
             command2 = false;
             command3 = true;
             command4 = false;
             command5 = false;
+            command6 = false;
+            command7 = false;
         } else if (buttonID==R.id.Field4){
             command1 = false;
             command2 = false;
             command3 = false;
             command4 = true;
             command5 = false;
+            command6 = false;
+            command7 = false;
         } else if (buttonID==R.id.Field5){
             command1 = false;
             command2 = false;
             command3 = false;
             command4 = false;
             command5 = true;
+            command6 = false;
+            command7 = false;
         } else if (buttonID==R.id.Field6){
             command1 = false;
             command2 = false;
@@ -887,8 +966,10 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
+    // ked klikneme na kontext menu ...
     @Override
     public boolean onContextItemSelected(MenuItem cItem) {
+        // deklarovanie premen z poli
         ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
         ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
@@ -1698,9 +1779,9 @@ public class Main extends Activity implements BTPripojenie{
         return true;
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod1(){
         ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
         if(field1.getContentDescription() == "1"){
@@ -1787,9 +1868,9 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod2(){
         ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
         if(field2.getContentDescription() == "1"){
@@ -1876,9 +1957,9 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod3(){
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
         if(field3.getContentDescription() == "1"){
@@ -1965,10 +2046,9 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
-
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod4(){
         ImageButton field4 = (ImageButton) findViewById(R.id.Field4);
         if(field4.getContentDescription() == "1"){
@@ -2055,10 +2135,9 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
-
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod5(){
         ImageButton field5 = (ImageButton) findViewById(R.id.Field5);
         if(field5.getContentDescription() == "1"){
@@ -2145,10 +2224,9 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
-
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod6(){
         ImageButton field6 = (ImageButton) findViewById(R.id.Field6);
         if(field6.getContentDescription() == "1"){
@@ -2235,9 +2313,9 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
-    // metoda pre prve pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
-    // ktoru posleme s parametrom, ktory zistime z EditTextu s pod pola
-    // parameter je cas, ako dlho bude vykonavanie metody trvat (v sekundach)
+    // metoda pre pole, zistime aky ma pouzity flag, podla toho vykoname metodu,
+    // ktoru posleme s parametrom, ktoru vieme z metod
+    // nastavime hodnotu castovacu podla casov - ako dlho bude vykonavanie metody trvat (v sekundach)
     public void fieldMethod7(){
         ImageButton field7 = (ImageButton) findViewById(R.id.Field7);
         if(field7.getContentDescription() == "1"){
@@ -2301,7 +2379,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goForward1(){
         splnenyPohyb = false;
         // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
-        updateMotorControlTime(power, power, 1);
+        updateMotorControlTime(100, 100, 1);
         // spustenie timeru s parametrom casu, kt. sme  zadali
         new CountDownTimer(time1-1000, 1) {
             public void onTick(long millisUntilFinished) {
@@ -2318,7 +2396,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goForward3(){
         splnenyPohyb = false;
         // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
-        updateMotorControlTime(power, power, 1);
+        updateMotorControlTime(100, 100, 1);
         // spustenie timeru s parametrom casu, kt. sme  zadali
         new CountDownTimer(time3-1000, 1) {
             public void onTick(long millisUntilFinished) {
@@ -2335,7 +2413,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goForward5(){
         splnenyPohyb = false;
         // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
-        updateMotorControlTime(power, power, 1);
+        updateMotorControlTime(100, 100, 1);
         // spustenie timeru s parametrom casu, kt. sme  zadali
         new CountDownTimer(time5-1000, 1) {
             public void onTick(long millisUntilFinished) {
@@ -2352,7 +2430,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goForward10(){
         splnenyPohyb = false;
         // do metody posielame v podstate rychlost (co je v tomto pripade 100) a cas
-        updateMotorControlTime(power, power, 1);
+        updateMotorControlTime(100, 100, 1);
         // spustenie timeru s parametrom casu, kt. sme  zadali
         new CountDownTimer(time10-1000, 1) {
             public void onTick(long millisUntilFinished) {
@@ -2369,7 +2447,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goBackward1(){
         splnenyPohyb = false;
         // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
-        updateMotorControlTime(-power, -power, 1);
+        updateMotorControlTime(-100, -100, 1);
         // a zase timer
         new CountDownTimer(time1-1000, 1){
             public void onTick(long millisUntilFinished) {
@@ -2386,7 +2464,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goBackward3(){
         splnenyPohyb = false;
         // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
-        updateMotorControlTime(-power, -power, 1);
+        updateMotorControlTime(-100, -100, 1);
         // a zase timer
         new CountDownTimer(time3-1000, 1){
             public void onTick(long millisUntilFinished) {
@@ -2403,7 +2481,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goBackward5(){
         splnenyPohyb = false;
         // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
-        updateMotorControlTime(-power, -power, 1);
+        updateMotorControlTime(-100, -100, 1);
         // a zase timer
         new CountDownTimer(time5-1000, 1){
             public void onTick(long millisUntilFinished) {
@@ -2420,7 +2498,7 @@ public class Main extends Activity implements BTPripojenie{
     public void goBackward10(){
         splnenyPohyb = false;
         // to iste ako v tej metode vyssie, zaporne hodnoty pre pohyb vzad
-        updateMotorControlTime(-power, -power, 1);
+        updateMotorControlTime(-100, -100, 1);
         // a zase timer
         new CountDownTimer(time10-1000, 1){
             public void onTick(long millisUntilFinished) {
@@ -2438,8 +2516,8 @@ public class Main extends Activity implements BTPripojenie{
         splnenyPohyb = false;
         // poslanie spravy so ziadnym oneskorenim, lavy motor a hodnota 30
         // (najviac mi to sedelo pre otocenie do lava)
-        sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, 30, 0);
-        sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, -30, 0);
+        sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, 50, 0);
+        sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, -50, 0);
         // a zase timer, tento krat ale posielame to otocenie aby trvalo 1 sekundu
         // metoda z lega  rotateControl sa dost zasekavala
         new CountDownTimer(time1, 1){
@@ -2457,8 +2535,8 @@ public class Main extends Activity implements BTPripojenie{
     // taka ista metoda ako ta horna, len s inym otocenim motora
     public void turnRight(){
         splnenyPohyb = false;
-        sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, -30, 0);
-        sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, 30, 0);
+        sendBTCmessage(BTKomunikacia.NO_DELAY, motorLeft, -50, 0);
+        sendBTCmessage(BTKomunikacia.NO_DELAY, motorRight, 50, 0);
         new CountDownTimer(time1, 1){
             public void onTick(long millisUntilFinished) {
             }
@@ -2526,11 +2604,16 @@ public class Main extends Activity implements BTPripojenie{
         }.start(); //spustenie timera
     }
 
+    // podmienka na splnenie dotyku
     public void dotykMetoda(){
+        // nastavime false
         splnenyDotyk = false;
 
+        // spustenie timeru, lebo cakame 5s
         new CountDownTimer(time5, 1) {
             @Override
+            // pri ticku sledujeme, ci bol zatlaceny,
+            // ak ano dame podmienku ako splnenu
             public void onTick(long l) {
                 if(dotyk){
                     splnenyDotyk = true;
@@ -2539,25 +2622,32 @@ public class Main extends Activity implements BTPripojenie{
             @Override
             public void onFinish() {
                 if (!splnenyDotyk)
+                    // ak nie, vypiseme hlasku
                     showToast(R.string.touchIncomplete, Toast.LENGTH_SHORT);
             }
         }.start();
     }
 
+    // podmienka na zvuk
     public void soundM25(){
         splnenyZvuk = false;
 
+        // spustime casovac na 5s
         new CountDownTimer(time5, 1) {
             @Override
+            // zistime ci hodnota je taka, aku sme zadali z podmienky
             public void onTick(long l) {
                 if(currentSoundL <= 25){
+                    // vypnutie casovaca
                     this.cancel();
+                    // podmienka splnena
                     splnenyZvuk = true;
                 }
             }
             @Override
             public void onFinish() {
                 if (!splnenyZvuk)
+                    // vypis hlasky ak nebola splnena
                     showToast(R.string.reqIncomplete, Toast.LENGTH_SHORT);
             }
         }.start();
@@ -2847,32 +2937,43 @@ public class Main extends Activity implements BTPripojenie{
     }
 
 
+    // deklarovanie handlerov
     private Handler dHandler = new Handler();
     private Handler bHandler = new Handler();
     private Handler sHandler = new Handler();
     private Handler zHandler = new Handler();
-    //private Handler uHandler = new Handler();
+    private Handler uHandler = new Handler();
 
+    // "vlakno" pre dotyk. senzor
     private Runnable dRunnable = new Runnable() {
         @Override
         public void run() {
+            // deklarovanie textu
             TextView dotyk = (TextView) findViewById(R.id.touchSenzor);
+            // vykonanie metody na zistenie stavu touchu
             udajeTouch();
+            // nastavenie textu podla hodnoty
             dotyk.setText(dotykovySenzor);
+            // vykonavame kazdych 100 ms
             dHandler.postDelayed(this, 100);
         }
     };
 
+    // "vlakno" pre baterku
     private Runnable bRunnable = new Runnable() {
         @Override
         public void run() {
+            // deklarovanie textu
             TextView baterka = (TextView) findViewById(R.id.batterySenzor);
+            // poslanie spravy zistenie stavu baterky
             sendBTCmessage(BTKomunikacia.NO_DELAY, BTKomunikacia.GET_BATTERY_STATE, 0, 0);
+            // nastavenie textu z premennej + %
             baterka.setText(String.valueOf((int)currentMiliVolts) + "%");
             bHandler.postDelayed(this, 5000);
         }
     };
 
+    // "vlakno" pre svetlo
     private Runnable sRunnable = new Runnable() {
         @Override
         public void run() {
@@ -2884,6 +2985,7 @@ public class Main extends Activity implements BTPripojenie{
         }
     };
 
+    // "vlakno" pre zvukovy senzor
     private Runnable zRunnable = new Runnable() {
         @Override
         public void run() {
@@ -2897,15 +2999,21 @@ public class Main extends Activity implements BTPripojenie{
         }
     };
 
-    /*private Runnable uRunnable = new Runnable() {
+    // "vlakno" pre ultrazvukovy senzor
+    private Runnable uRunnable = new Runnable() {
         @Override
         public void run() {
+            TextView ultra = (TextView) findViewById(R.id.ultraSenzor);
             udajeUltrasonic();
+            ultrazvukovySenzor = String.valueOf(currentUltrasonicL);
+            ultra.setText(ultrazvukovySenzor+" cm");
             uHandler.postDelayed(this, 200);
         }
-    };*/
+    };
 
+    // metoda, kt. sa vykona po stlaceni tlacidla na vymazanie poli
     public void deleteAll(View view){
+        // deklarovanie tych poli
         ImageButton field1 = (ImageButton) findViewById(R.id.Field1);
         ImageButton field2 = (ImageButton) findViewById(R.id.Field2);
         ImageButton field3 = (ImageButton) findViewById(R.id.Field3);
@@ -2914,6 +3022,7 @@ public class Main extends Activity implements BTPripojenie{
         ImageButton field6 = (ImageButton) findViewById(R.id.Field6);
         ImageButton field7 = (ImageButton) findViewById(R.id.Field7);
 
+        // nastavenie hodnot content description na 0
         field1.setContentDescription("0");
         field2.setContentDescription("0");
         field3.setContentDescription("0");
@@ -2922,6 +3031,7 @@ public class Main extends Activity implements BTPripojenie{
         field6.setContentDescription("0");
         field7.setContentDescription("0");
 
+        // vymazanie obrazkov
         field1.setImageResource(0);
         field2.setImageResource(0);
         field3.setImageResource(0);
@@ -2931,6 +3041,7 @@ public class Main extends Activity implements BTPripojenie{
         field7.setImageResource(0);
     }
 
+    // ak klikneme na text o zvuku zmenime co monitoruje dB a dBA
     public void zmenaSoundu(View view){
         TextView zvukText = (TextView) findViewById(R.id.textSound);
         if(!zvukB){
@@ -2944,6 +3055,7 @@ public class Main extends Activity implements BTPripojenie{
         }
     }
 
+    // ak klikneme na text o svetle zmenime co monitoruje prostredie a odraz svetla
     public void zmenaSvetla(View view){
         TextView svetloText = (TextView) findViewById(R.id.textLight);
         if(!svetloB){

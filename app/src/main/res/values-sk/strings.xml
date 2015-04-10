@@ -40,8 +40,8 @@
     <string name="wait">Čakaj</string>
     <string name="backward">Vzad</string>
     <string name="forward">Vpred</string>
-    <string name="turnLeft">Zatoč vľavo</string>
-    <string name="turnRight">Zatoč vpravo</string>
+    <string name="turnLeft">Odboč vľavo</string>
+    <string name="turnRight">Odboč vpravo</string>
     <string name="monitoring">Monitorovanie</string>
     <string name="batteryLevel">Hladina batérie:</string>
     <string name="lightLevel">Úroveň svetla:</string>
